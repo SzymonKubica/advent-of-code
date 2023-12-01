@@ -3,33 +3,16 @@ use std::fs;
 // This function takes in a list of lines, all of which containing at least one
 // digit. It is supposed to return the sum of the double digit numbers (calibration values)
 // created by sticking together the first and last digits on each line.
+
 pub fn part1(input_file: &str) {
-    let contents = fs::read_to_string(input_file).expect("Should have been able to read the file");
-    let lines = contents.split("\n");
-
-    println!("Supplied calibration document:\n{}", contents);
-
-    let calibration_value: i32 = lines
-        .into_iter()
-        .map(|line| line.trim())
-        .filter(|line| line != &"")
-        .map(|line| get_calibration_value(line))
-        .sum();
-
-    println!("Calibration value: {}", calibration_value)
-}
-
-fn get_calibration_value(line: &str) -> i32 {
-    let length = line.chars().count();
-    let first_digit = (0..length).find_map(|i| get_digit(&line[i..])).unwrap();
-    let last_digit = (0..length)
-        .rev()
-        .find_map(|i| get_digit(&line[i..]))
-        .unwrap();
-    return 10 * first_digit + last_digit;
+    get_calibration_value(input_file, get_digit);
 }
 
 pub fn part2(input_file: &str) {
+    get_calibration_value(input_file, get_digit_or_spelled_out);
+}
+
+fn get_calibration_value(input_file: &str, digit_selector_function: fn(&str) -> Option<i32>) {
     let contents = fs::read_to_string(input_file).expect("Should have been able to read the file");
     let lines = contents.split("\n");
 
@@ -39,35 +22,33 @@ pub fn part2(input_file: &str) {
         .into_iter()
         .map(|line| line.trim())
         .filter(|line| line != &"")
-        .map(|line| get_calibration_value_with_spelled_out_digits(line))
+        .map(|line| {
+            let length = line.chars().count();
+            let first_digit = (0..length)
+                .find_map(|i| digit_selector_function(&line[i..]))
+                .unwrap();
+            let last_digit = (0..length)
+                .rev()
+                .find_map(|i| digit_selector_function(&line[i..]))
+                .unwrap();
+            10 * first_digit + last_digit
+        })
         .sum();
 
-    println!("Calibration value: {}", calibration_value)
+    println!("Calibration value: {}", calibration_value);
 }
 
-fn get_calibration_value_with_spelled_out_digits(line: &str) -> i32 {
-    let length = line.chars().count();
-    let first_digit = (0..length)
-        .find_map(|i| get_digit_or_str(&line[i..]))
-        .unwrap();
-    let last_digit = (0..length)
-        .rev()
-        .find_map(|i| get_digit_or_str(&line[i..]))
-        .unwrap();
-    return 10 * first_digit + last_digit;
+fn get_digit_or_spelled_out(line: &str) -> Option<i32> {
+    get_digit(line).or_else(|| get_spelled_out_digit(line))
 }
 
 fn get_digit(line: &str) -> Option<i32> {
     let c = line.chars().next()?;
     if c.is_digit(10) {
-        return Some(c.to_string().parse().unwrap());
+        Some(c.to_string().parse().unwrap())
     } else {
-        return None;
+        None
     }
-}
-
-fn get_digit_or_str(line: &str) -> Option<i32> {
-    get_digit(line).or_else(|| get_spelled_out_digit(line))
 }
 
 fn get_spelled_out_digit(line: &str) -> Option<i32> {
