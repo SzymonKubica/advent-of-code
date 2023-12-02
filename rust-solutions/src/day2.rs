@@ -20,7 +20,7 @@ struct Round {
     colors: HashMap<Color, i32>,
 }
 
-#[derive(Eq, Hash, PartialEq, Debug, Sequence)]
+#[derive(Eq, Hash, PartialEq, Debug, Sequence, Copy, Clone)]
 enum Color {
     Red,
     Green,
@@ -28,6 +28,49 @@ enum Color {
 }
 
 pub fn part1(input_file: &str) {
+    let games = parse_games(input_file);
+    let sum_of_valid_game_ids: i32 = games
+        .iter()
+        .filter(|g| is_game_valid(g))
+        .map(|g| g.id)
+        .sum();
+
+    println!("Sum of valid game IDs: {}", sum_of_valid_game_ids);
+}
+
+pub fn part2(input_file: &str) {
+    let games = parse_games(input_file);
+    let sum_of_minimum_sets_powers: i32 = games
+        .iter()
+        .map(|g| get_minimum_set(g))
+        .map(|r| get_set_power(r))
+        .sum();
+
+
+    println!("Sum of minimum set powers is: {}", sum_of_minimum_sets_powers);
+}
+
+fn get_set_power(r: Round) -> i32 {
+    return r.colors.values().product();
+}
+
+// Minimum set is a map from each color to the min number of required cubes of that color.
+fn get_minimum_set(g: &Game) -> Round {
+    let mut min_colors = HashMap::from([(Color::Red, 0), (Color::Green, 0), (Color::Blue, 0)]);
+
+    for round in &g.rounds {
+        for color in all::<Color>() {
+            if round.colors.contains_key(&color)
+                && round.colors.get(&color) > min_colors.get(&color)
+            {
+                min_colors.insert(color, *round.colors.get(&color).unwrap());
+            }
+        }
+    }
+    Round { colors: min_colors }
+}
+
+fn parse_games(input_file: &str) -> Vec<Game> {
     let contents = fs::read_to_string(input_file).expect("Should have been able to read the file");
     let lines = contents.split("\n");
 
@@ -41,14 +84,7 @@ pub fn part1(input_file: &str) {
             games.push(game);
         }
     }
-
-    let sum_of_valid_game_ids: i32 = games
-        .iter()
-        .filter(|g| is_game_valid(g))
-        .map(|g| g.id)
-        .sum();
-
-    println!("Sum of valid game IDs: {}", sum_of_valid_game_ids);
+    games
 }
 
 fn is_game_valid(game: &Game) -> bool {
@@ -122,5 +158,3 @@ fn parse_round(round: &str) -> IResult<&str, Round> {
 fn game_id(input: &str) -> IResult<&str, i32> {
     map_res(take_while1(|c: char| c.is_digit(10)), from_decimal)(input)
 }
-
-pub fn part2(input_file: &str) {}
