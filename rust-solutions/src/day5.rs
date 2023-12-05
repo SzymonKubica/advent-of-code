@@ -68,7 +68,7 @@ pub fn part2(input_file: &str) {
 fn find_all_seeds_given_range_encoding(seeds_encoding: Vec<u64>) -> Vec<u64> {
     let mut seeds: Vec<u64> = vec![];
     for i in (0..seeds_encoding.len()).step_by(2) {
-        for seed_number in seeds_encoding[i]..(seeds_encoding[i] + seeds_encoding[i+1]) {
+        for seed_number in seeds_encoding[i]..(seeds_encoding[i] + seeds_encoding[i + 1]) {
             seeds.push(seed_number)
         }
     }
