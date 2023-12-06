@@ -1,8 +1,4 @@
-use std::{
-    cmp::{max, min},
-    collections::HashMap,
-    fs,
-};
+use std::{cmp::min, collections::HashMap, fs};
 
 #[derive(Debug)]
 struct Card {
