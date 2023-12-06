@@ -1,8 +1,4 @@
-use std::{
-    cmp::{max, min},
-    collections::HashMap,
-    fs,
-};
+use std::{cmp::min, collections::HashMap, fs};
 
 fn get_engine_schematic(input_file: &str) -> Vec<Vec<char>> {
     let lines = fs::read_to_string(&input_file).expect("Should have been able to open a file");
@@ -140,8 +136,11 @@ pub fn part2(input_file: &str) {
     println!("Sum of gear ratios: {}", sum_of_gear_ratios);
 }
 
-
-fn find_symbol_in_neighbourhood(x: usize, y: usize, engine_schematic: &Vec<Vec<char>>) -> Option<Part> {
+fn find_symbol_in_neighbourhood(
+    x: usize,
+    y: usize,
+    engine_schematic: &Vec<Vec<char>>,
+) -> Option<Part> {
     let lower_x_bound = if x == 0 { x } else { x - 1 };
     let lower_y_bound = if y == 0 { y } else { y - 1 };
 
@@ -160,11 +159,11 @@ fn find_symbol_in_neighbourhood(x: usize, y: usize, engine_schematic: &Vec<Vec<c
                     x: i,
                     y: j,
                     symbol: engine_schematic[j][i],
-                })
+                });
             }
         }
     }
-    return None
+    return None;
 }
 
 // Checks if the neighbourhood of point (x,y) contains a symbol.

@@ -3,9 +3,7 @@ use std::fs;
 
 extern crate nom;
 use enum_iterator::{all, Sequence};
-use nom::bytes::complete::{tag, take_while1, take_while_m_n};
-use nom::combinator::map_res;
-use nom::sequence::tuple;
+use nom::{bytes::complete::{tag, take_while1}, combinator::map_res};
 use nom::IResult;
 
 #[derive(Debug)]
@@ -46,8 +44,10 @@ pub fn part2(input_file: &str) {
         .map(|r| get_set_power(r))
         .sum();
 
-
-    println!("Sum of minimum set powers is: {}", sum_of_minimum_sets_powers);
+    println!(
+        "Sum of minimum set powers is: {}",
+        sum_of_minimum_sets_powers
+    );
 }
 
 fn get_set_power(r: Round) -> i32 {

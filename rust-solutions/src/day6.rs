@@ -5,8 +5,10 @@ pub fn part1(input_file: &str) {
 
     let total_possibilities: u64 = races.iter().map(|r| r.count_winning_strategies()).product();
 
-    println!("Total possibilities of winning all races: {}", total_possibilities);
-
+    println!(
+        "Total possibilities of winning all races: {}",
+        total_possibilities
+    );
 }
 
 pub fn part2(input_file: &str) {
@@ -14,7 +16,10 @@ pub fn part2(input_file: &str) {
 
     let total_possibilities = race.count_winning_strategies();
 
-    println!("Total possibilities of winning the race: {}", total_possibilities);
+    println!(
+        "Total possibilities of winning the race: {}",
+        total_possibilities
+    );
 }
 
 #[derive(Debug)]
@@ -26,7 +31,7 @@ struct Race {
 impl Race {
     pub fn count_winning_strategies(&self) -> u64 {
         let mut winning_strats: u64 = 0;
-        for acceleration_period in 1..(self.duration-1) {
+        for acceleration_period in 1..(self.duration - 1) {
             if self.calculate_travelled_distance(acceleration_period) > self.farthest_distance {
                 winning_strats += 1;
             }
@@ -48,15 +53,24 @@ fn read_race_bad_kerning(input_file: &str) -> Race {
         .split(" ")
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
-        .skip(1).collect::<String>().parse::<u64>().unwrap();
+        .skip(1)
+        .collect::<String>()
+        .parse::<u64>()
+        .unwrap();
 
     let farthest_distance = lines[1]
         .split(" ")
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
-        .skip(1).collect::<String>().parse::<u64>().unwrap();
+        .skip(1)
+        .collect::<String>()
+        .parse::<u64>()
+        .unwrap();
 
-    Race { duration, farthest_distance }
+    Race {
+        duration,
+        farthest_distance,
+    }
 }
 
 fn read_races(input_file: &str) -> Vec<Race> {
