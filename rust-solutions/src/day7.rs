@@ -169,6 +169,7 @@ impl Hand {
 
 // Part 2 requires different logic for ordering hands and so it is done here
 // to avoid confusion with the duplication.
+// TODO: learn generics to avoid duplication.
 pub fn part2(input_file: &str) {
     let mut hands = read_hands_with_joker(input_file);
 
@@ -330,7 +331,7 @@ impl HandWithJoker {
         } else {
             let joker_count = jokers.unwrap();
             if joker_count == &5 {
-                return HandType::FiveOfAKind
+                return HandType::FiveOfAKind;
             }
             let occurrences = card_counts
                 .iter()
