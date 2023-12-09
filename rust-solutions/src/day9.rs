@@ -9,7 +9,6 @@ pub fn part1(input_file: &str) {
 }
 
 fn extrapolate_history(history: &Vec<i32>) -> i32 {
-
     let derivative_histories = get_derivative_histories(history);
 
     let mut appended_values: Vec<i32> = vec![];
@@ -27,11 +26,13 @@ fn extrapolate_history(history: &Vec<i32>) -> i32 {
     *appended_values.last().unwrap()
 }
 
-
 pub fn part2(input_file: &str) {
     let histories = read_histories(input_file);
 
-    let sum_extrapolated_values: i32 = histories.iter().map(|h| extrapolate_history_backwards(h)).sum();
+    let sum_extrapolated_values: i32 = histories
+        .iter()
+        .map(|h| extrapolate_history_backwards(h))
+        .sum();
 
     println!("Sum of extrapolated values: {}", sum_extrapolated_values);
 }
@@ -53,9 +54,7 @@ fn get_derivative_histories(history: &Vec<i32>) -> Vec<Vec<i32>> {
     derivative_histories
 }
 
-
 fn extrapolate_history_backwards(history: &Vec<i32>) -> i32 {
-
     let derivative_histories = get_derivative_histories(history);
 
     let mut appended_values: Vec<i32> = vec![];
@@ -77,6 +76,10 @@ fn read_histories(input_file: &str) -> Vec<Vec<i32>> {
     fs::read_to_string(&input_file)
         .expect("Unable to read the file")
         .lines()
-        .map(|l| l.split(" ").map(|s| s.parse::<i32>().unwrap()).collect::<Vec<i32>>())
+        .map(|l| {
+            l.split(" ")
+                .map(|s| s.parse::<i32>().unwrap())
+                .collect::<Vec<i32>>()
+        })
         .collect()
 }
