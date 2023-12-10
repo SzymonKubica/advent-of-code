@@ -114,7 +114,85 @@ fn get_pipes(input_file: &str) -> Vec<Vec<PipeSegment>> {
         .map(|line| line.chars().map(|c| PipeSegment::from(c)).collect())
         .collect()
 }
+
 pub fn part1(input_file: &str) {
+    let pipe_map = get_pipes(input_file);
+
+    // Find the starting point
+    let mut position: (usize, usize) = (0, 0);
+    // We don't know the direction yet
+    let mut direction;
+
+    for (i, row) in pipe_map.iter().enumerate() {
+        if row.contains(&PipeSegment::StartingPoint) {
+            position = (
+                row.iter()
+                    .position(|s| s == &PipeSegment::StartingPoint)
+                    .unwrap(),
+                i,
+            );
+            break;
+        }
+    }
+    println!("Starting position: {:?}", position);
+
+    // # denotes the loop
+    let right = &pipe_map[position.1][position.0 + 1];
+    let down = &pipe_map[position.1 + 1][position.0];
+    let left = if position.0 > 0 {
+        &pipe_map[position.1][position.0 - 1]
+    } else {
+        &PipeSegment::Ground
+    };
+    let up = if position.1 > 0 {
+        &pipe_map[position.1 - 1][position.0]
+    } else {
+        &PipeSegment::Ground
+    };
+
+    if right.allows_right() {
+        (position, direction) = right.travel_right(position.0, position.1);
+    } else if down.allows_down() {
+        (position, direction) = down.travel_down(position.0, position.1);
+    } else if left.allows_left() {
+        (position, direction) = left.travel_left(position.0, position.1);
+    } else {
+        (position, direction) = up.travel_up(position.0, position.1);
+    }
+
+    // Now we have the next position in the pipe so we can just follow it
+    // and assume that everything will be connected properly.
+
+    // We have already taken 1 step
+    let mut steps = 1;
+    let mut next = get_adjacent_position(&position, &direction);
+
+    while &pipe_map[next.1][next.0] != &PipeSegment::StartingPoint {
+        println!("Current position: {:?}", position);
+        println!("Current direction: {:?}", direction);
+        println!("Next position: {:?}", next);
+        println!("-------");
+        let next_pipe = &pipe_map[next.1][next.0];
+        let temp = next.clone();
+        (position, direction) = match direction {
+            Direction::Right => next_pipe.travel_right(position.0, position.1),
+            Direction::Down => next_pipe.travel_down(position.0, position.1),
+            Direction::Left => next_pipe.travel_left(position.0, position.1),
+            Direction::Up => next_pipe.travel_up(position.0, position.1),
+        };
+        next = get_adjacent_position(&position, &direction);
+        position = temp;
+
+        steps += 1;
+    }
+
+    println!("The loop takes a total of {} steps.", steps);
+    println!(
+        "The farthest path along the loop is {} steps long.",
+        (steps + 1) / 2
+    );
+}
+pub fn part2(input_file: &str) {
     let pipe_map = get_pipes(input_file);
 
     // Find the starting point
@@ -154,16 +232,40 @@ pub fn part1(input_file: &str) {
     set_entry(&position, &mut inside_outside_map);
     let right = &pipe_map[position.1][position.0 + 1];
     let down = &pipe_map[position.1 + 1][position.0];
-    let left = if position.0 > 0 { &pipe_map[position.1][position.0 - 1] } else { &PipeSegment::Ground };
-    let up = if position.1 > 0 { &pipe_map[position.1 - 1][position.0] } else { &PipeSegment::Ground };
+    let left = if position.0 > 0 {
+        &pipe_map[position.1][position.0 - 1]
+    } else {
+        &PipeSegment::Ground
+    };
+    let up = if position.1 > 0 {
+        &pipe_map[position.1 - 1][position.0]
+    } else {
+        &PipeSegment::Ground
+    };
 
     if right.allows_right() {
+        set_entry_exact(
+            &(2 * position.0 + 1, 2 * position.1),
+            &mut inside_outside_map,
+        );
         (position, direction) = right.travel_right(position.0, position.1);
     } else if down.allows_down() {
+        set_entry_exact(
+            &(2 * position.0, 2 * position.1 + 1),
+            &mut inside_outside_map,
+        );
         (position, direction) = down.travel_down(position.0, position.1);
     } else if left.allows_left() {
+        set_entry_exact(
+            &(2 * position.0 - 1, 2 * position.1),
+            &mut inside_outside_map,
+        );
         (position, direction) = left.travel_left(position.0, position.1);
     } else {
+        set_entry_exact(
+            &(2 * position.0, 2 * position.1 - 1),
+            &mut inside_outside_map,
+        );
         (position, direction) = up.travel_up(position.0, position.1);
     }
 
@@ -176,7 +278,6 @@ pub fn part1(input_file: &str) {
     let mut steps = 1;
     let mut next = get_adjacent_position(&position, &direction);
 
-
     while &pipe_map[next.1][next.0] != &PipeSegment::StartingPoint {
         println!("Current position: {:?}", position);
         println!("Current direction: {:?}", direction);
@@ -186,11 +287,22 @@ pub fn part1(input_file: &str) {
         let temp = next.clone();
         // Interpolate with the current direction
         match direction {
-            Direction::Right => set_entry_exact(&(2*position.0 + 1, 2*position.1), &mut inside_outside_map),
-            Direction::Down => set_entry_exact(&(2*position.0, 2*position.1 + 1), &mut inside_outside_map),
-            Direction::Left => set_entry_exact(&(2*position.0 - 1, 2*position.1), &mut inside_outside_map),
-            Direction::Up => set_entry_exact(&(2*position.0, 2*position.1 - 1), &mut inside_outside_map),
-
+            Direction::Right => set_entry_exact(
+                &(2 * position.0 + 1, 2 * position.1),
+                &mut inside_outside_map,
+            ),
+            Direction::Down => set_entry_exact(
+                &(2 * position.0, 2 * position.1 + 1),
+                &mut inside_outside_map,
+            ),
+            Direction::Left => set_entry_exact(
+                &(2 * position.0 - 1, 2 * position.1),
+                &mut inside_outside_map,
+            ),
+            Direction::Up => set_entry_exact(
+                &(2 * position.0, 2 * position.1 - 1),
+                &mut inside_outside_map,
+            ),
         }
         (position, direction) = match direction {
             Direction::Right => next_pipe.travel_right(position.0, position.1),
@@ -202,15 +314,107 @@ pub fn part1(input_file: &str) {
         set_entry(&temp, &mut inside_outside_map);
         position = temp;
 
-
         steps += 1;
     }
 
+    // Need to close down the loop
+    match direction {
+        Direction::Right => set_entry_exact(
+            &(2 * position.0 + 1, 2 * position.1),
+            &mut inside_outside_map,
+        ),
+        Direction::Down => set_entry_exact(
+            &(2 * position.0, 2 * position.1 + 1),
+            &mut inside_outside_map,
+        ),
+        Direction::Left => set_entry_exact(
+            &(2 * position.0 - 1, 2 * position.1),
+            &mut inside_outside_map,
+        ),
+        Direction::Up => set_entry_exact(
+            &(2 * position.0, 2 * position.1 - 1),
+            &mut inside_outside_map,
+        ),
+    }
+
     println!("The loop takes a total of {} steps.", steps);
-    println!("The farthest path along the loop is {} steps long.", (steps + 1)/2);
+    println!(
+        "The farthest path along the loop is {} steps long.",
+        (steps + 1) / 2
+    );
     println!("Inside outside map");
     print_in_out(&inside_outside_map);
 
+    // Set the boundary to outside
+    for i in 0..inside_outside_map[0].len() {
+        if &inside_outside_map[0][i] == &'.' {
+            set_entry_exact_as('O', &(i, 0), &mut inside_outside_map);
+        }
+    }
+    for i in 1..(inside_outside_map.len()) {
+        if &inside_outside_map[i][0] == &'.' {
+            set_entry_exact_as('O', &(0, i), &mut inside_outside_map);
+        }
+        if &inside_outside_map[i][inside_outside_map[0].len() - 1] == &'.' {
+            set_entry_exact_as(
+                'O',
+                &(inside_outside_map[0].len() - 1, i),
+                &mut inside_outside_map,
+            );
+        }
+    }
+    for i in 0..inside_outside_map[inside_outside_map.len() - 1].len() {
+        if inside_outside_map[inside_outside_map.len() - 1][i] == '.' {
+            set_entry_exact_as(
+                'O',
+                &(i, inside_outside_map.len() - 1),
+                &mut inside_outside_map,
+            );
+        }
+    }
+
+    println!("Inside outside map with outside marked");
+    print_in_out(&inside_outside_map);
+
+    let mut converged = false;
+
+    while !converged {
+        converged = true;
+        for j in 1..inside_outside_map.len() - 1 {
+            for i in 1..(inside_outside_map[0].len() - 1) {
+                if &inside_outside_map[j][i] == &'.'
+                    && get_adjacent_chars(i, j, &inside_outside_map).contains(&'O')
+                {
+                    set_entry_exact_as('O', &(i, j), &mut inside_outside_map);
+                    converged = false;
+                }
+            }
+        }
+    }
+
+    println!("Inside outside map after convergence ");
+    print_in_out(&inside_outside_map);
+
+    // Now we count the elements on the inside
+    let mut inside_count = 0;
+    for j in 0..inside_outside_map.len() {
+        for i in 0..inside_outside_map[0].len() {
+            if i % 2 == 0 && j % 2 == 0 && inside_outside_map[j][i] == '.' {
+                inside_count += 1;
+            }
+        }
+    }
+
+    println!("Number of tiles on the inside: {}", inside_count);
+}
+
+fn get_adjacent_chars(i: usize, j: usize, inside_outside_map: &Vec<Vec<char>>) -> [char; 4] {
+    [
+        inside_outside_map[j + 1][i],
+        inside_outside_map[j - 1][i],
+        inside_outside_map[j][i + 1],
+        inside_outside_map[j][i - 1],
+    ]
 }
 
 fn set_entry(position: &(usize, usize), in_out_map: &mut Vec<Vec<char>>) {
@@ -221,12 +425,15 @@ fn set_entry_exact(position: &(usize, usize), in_out_map: &mut Vec<Vec<char>>) {
     in_out_map[position.1][position.0] = '#';
 }
 
+fn set_entry_exact_as(c: char, position: &(usize, usize), in_out_map: &mut Vec<Vec<char>>) {
+    in_out_map[position.1][position.0] = c;
+}
+
 fn print_in_out(in_out_map: &Vec<Vec<char>>) {
     for row in in_out_map {
         println!("{}", row.iter().collect::<String>());
     }
 }
-
 
 fn get_adjacent_position(position: &(usize, usize), direction: &Direction) -> (usize, usize) {
     match direction {
@@ -236,5 +443,3 @@ fn get_adjacent_position(position: &(usize, usize), direction: &Direction) -> (u
         Direction::Up => (position.0, position.1 - 1),
     }
 }
-
-pub fn part2(input_file: &str) {}
