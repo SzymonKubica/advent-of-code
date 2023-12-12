@@ -297,6 +297,7 @@ pub fn part2(input_file: &str) {
     let mut memo = HashMap::new();
     for record in &condition_records {
         let combs = determine_feasible_combinations_memo(record, &mut memo);
+        println!("condition record: {}", record.to_string());
         println!("combinations: {}", combs);
         combinations.push(combs);
     }
