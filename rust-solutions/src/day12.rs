@@ -118,21 +118,19 @@ fn unfold_line(line: &str) -> String {
 
 fn determine_feasible_combinations_memo(
     condition_record: &ConditionRecord,
-    memo_map: Box<HashMap<ConditionRecord, usize>>,
-) -> (usize, Box<HashMap<ConditionRecord, usize>>) {
+    memo_map: &mut HashMap<ConditionRecord, usize>,
+) -> usize {
     if memo_map.contains_key(condition_record) {
-        return (memo_map[condition_record], memo_map);
+        return memo_map[condition_record];
     }
-
-    let mut new_map = memo_map.clone();
 
     if condition_record.damaged_groups.len() == 0 {
         if condition_record.springs.contains(&Spring::Broken) {
-            let _ = new_map.get_mut(condition_record).insert(&mut 0);
-            return (0, new_map);
+            memo_map.insert(condition_record.clone(), 0);
+            return 0;
         }
-        let _ = new_map.get_mut(condition_record).insert(&mut 1);
-        return (1, new_map);
+        memo_map.insert(condition_record.clone(), 1);
+        return 1;
     }
 
     if let Some((i, l)) = get_first_contiguous_block_length_and_index(&condition_record.springs) {
@@ -156,8 +154,8 @@ fn determine_feasible_combinations_memo(
                 memo_map,
             )
         } else {
-            let _ = new_map.get_mut(condition_record).insert(&mut 0);
-            (0, new_map)
+            memo_map.insert(condition_record.clone(), 0);
+            0
         }
     } else {
         // Here we need to set the first encountered ? in two ways and return the
@@ -168,33 +166,29 @@ fn determine_feasible_combinations_memo(
 
             springs1[next_unknown] = Spring::Broken;
             springs2[next_unknown] = Spring::Operational;
-            let (count1, map1) = determine_feasible_combinations_memo(
+            let count1 = determine_feasible_combinations_memo(
                 &ConditionRecord {
                     springs: springs1,
                     damaged_groups: condition_record.damaged_groups.clone(),
                 },
-                memo_map.clone(),
+                memo_map,
             );
-            let (count2, map2) = determine_feasible_combinations_memo(
+            let count2 = determine_feasible_combinations_memo(
                 &ConditionRecord {
                     springs: springs2,
                     damaged_groups: condition_record.damaged_groups.clone(),
                 },
                 memo_map,
             );
-            map1.iter().for_each(|(k, v)| {
-                new_map.insert(k.clone(), v.clone());
-            });
-            map2.iter().for_each(|(k, v)| {
-                new_map.insert(k.clone(), v.clone());
-            });
-            let _ = new_map
+
+            memo_map.insert(condition_record.clone(), count1 + count2);
+            let _ = memo_map
                 .get_mut(condition_record)
                 .insert(&mut (count1 + count2));
-            (count1 + count2, new_map)
+            count1 + count2
         } else {
-            let _ = new_map.get_mut(condition_record).insert(&mut 0);
-            (0, new_map)
+            memo_map.insert(condition_record.clone(), 0);
+            0
         }
     }
 }
@@ -300,11 +294,11 @@ pub fn part2(input_file: &str) {
     let condition_records = read_unfolded_condition_records(input_file);
 
     let mut combinations: Vec<usize> = vec![];
-    let mut memo = Box::new(HashMap::new());
-    for i in 0..condition_records.len() {
-        let (combs, new_memo) = determine_feasible_combinations_memo(&condition_records[i], memo);
+    let mut memo = HashMap::new();
+    for record in &condition_records {
+        let combs = determine_feasible_combinations_memo(record, &mut memo);
+        println!("combinations: {}", combs);
         combinations.push(combs);
-        memo = new_memo;
     }
 
     let sum_of_combinations: usize = combinations.iter().sum();
