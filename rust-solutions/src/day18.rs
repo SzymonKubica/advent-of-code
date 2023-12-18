@@ -62,13 +62,17 @@ impl Instruction {
         let length = self.color.len();
         let direction = match self.color.chars().last().unwrap() {
             '0' => Direction::Right,
-            '1'=> Direction::Down,
-            '2'=> Direction::Left,
-            '3'=> Direction::Up,
+            '1' => Direction::Down,
+            '2' => Direction::Left,
+            '3' => Direction::Up,
             _ => panic!("invalid direction char"),
         };
         let length = usize::from_str_radix(&self.color[0..(length - 1)], 16).unwrap();
-        Instruction { direction, length, color: "".to_string()}
+        Instruction {
+            direction,
+            length,
+            color: "".to_string(),
+        }
     }
 }
 
@@ -178,7 +182,10 @@ pub fn part2(input_file: &str) {
         println!("{}", instruction.to_string());
     }
 
-    let instructions = instructions.iter().map(|i| i.recover_from_hex()).collect::<Vec<Instruction>>();
+    let instructions = instructions
+        .iter()
+        .map(|i| i.recover_from_hex())
+        .collect::<Vec<Instruction>>();
 
     let mut coordinates: Vec<(i64, i64)> = vec![];
 
@@ -205,12 +212,11 @@ pub fn part2(input_file: &str) {
     // Now we need to restore the total area using Pick's theorem:
     // Area = interior_points + boundary_points / 2 - 1
     // We are looking for interior_points + boundary_points
-    println!("Total integer area: {}", area + 1 + boundary /2);
+    println!("Total integer area: {}", area + 1 + boundary / 2);
 }
 
-fn get_determinant(point1: (i64, i64), point2: (i64,i64)) -> i64 {
+fn get_determinant(point1: (i64, i64), point2: (i64, i64)) -> i64 {
     point1.0 * point2.1 - point1.1 * point2.0
-
 }
 pub fn part2_overcomplicated(input_file: &str) {
     let instructions = read_instructions(input_file);
