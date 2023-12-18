@@ -32,12 +32,21 @@ impl ToString for Direction {
 }
 
 impl Direction {
-    pub fn translate(&self, point: (i32, i32)) -> (i32, i32) {
+    pub fn translate(&self, point: (i64, i64)) -> (i64, i64) {
         match self {
             Direction::Up => (point.0, point.1 - 1),
             Direction::Down => (point.0, point.1 + 1),
             Direction::Left => (point.0 - 1, point.1),
             Direction::Right => (point.0 + 1, point.1),
+        }
+    }
+
+    fn translate_by(&self, point: (i64, i64), length: i64) -> (i64, i64) {
+        match self {
+            Direction::Up => (point.0, point.1 - length),
+            Direction::Down => (point.0, point.1 + length),
+            Direction::Left => (point.0 - length, point.1),
+            Direction::Right => (point.0 + length, point.1),
         }
     }
 }
@@ -48,12 +57,27 @@ struct Instruction {
     color: String,
 }
 
+impl Instruction {
+    fn recover_from_hex(&self) -> Self {
+        let length = self.color.len();
+        let direction = match self.color.chars().last().unwrap() {
+            '0' => Direction::Right,
+            '1'=> Direction::Down,
+            '2'=> Direction::Left,
+            '3'=> Direction::Up,
+            _ => panic!("invalid direction char"),
+        };
+        let length = usize::from_str_radix(&self.color[0..(length - 1)], 16).unwrap();
+        Instruction { direction, length, color: "".to_string()}
+    }
+}
+
 impl From<&str> for Instruction {
     fn from(value: &str) -> Self {
         let parts = value.trim().split(" ").collect::<Vec<&str>>();
         let direction = Direction::from(parts[0].chars().nth(0).unwrap());
         let length = parts[1].parse::<usize>().unwrap();
-        let color = parts[2][1..(parts[2].len() - 1)].to_string();
+        let color = parts[2][2..(parts[2].len() - 1)].to_string();
 
         Instruction {
             direction,
@@ -90,7 +114,7 @@ pub fn part1(input_file: &str) {
     // that aren't on the inside even though they aren't reachable from the outside
     // i.e. the ones that are enclosed by the outer side of the loop.
     let mut trench = vec![vec!['.'; 4 * width]; 4 * height];
-    let mut position = (2 * width as i32, 2 * height as i32);
+    let mut position = (2 * width as i64, 2 * height as i64);
 
     for instruction in &instructions {
         for _ in 0..(2 * instruction.length) {
@@ -150,6 +174,46 @@ pub fn part1(input_file: &str) {
 
 pub fn part2(input_file: &str) {
     let instructions = read_instructions(input_file);
+    for instruction in &instructions {
+        println!("{}", instruction.to_string());
+    }
+
+    let instructions = instructions.iter().map(|i| i.recover_from_hex()).collect::<Vec<Instruction>>();
+
+    let mut coordinates: Vec<(i64, i64)> = vec![];
+
+    let mut position = (0, 0);
+    coordinates.push(position);
+    let mut boundary: i64 = 0;
+
+    for instruction in instructions {
+        position = instruction
+            .direction
+            .translate_by(position, instruction.length as i64);
+        coordinates.push(position);
+        boundary += instruction.length as i64;
+    }
+
+    let mut area = 0;
+    for i in 0..(coordinates.len() - 1) {
+        area += get_determinant(coordinates[i], coordinates[i + 1]);
+    }
+    area += get_determinant(*coordinates.last().unwrap(), coordinates[0]);
+    area = area / 2;
+
+    println!("Total enclosed area: {}", area);
+    // Now we need to restore the total area using Pick's theorem:
+    // Area = interior_points + boundary_points / 2 - 1
+    // We are looking for interior_points + boundary_points
+    println!("Total integer area: {}", area + 1 + boundary /2);
+}
+
+fn get_determinant(point1: (i64, i64), point2: (i64,i64)) -> i64 {
+    point1.0 * point2.1 - point1.1 * point2.0
+
+}
+pub fn part2_overcomplicated(input_file: &str) {
+    let instructions = read_instructions(input_file);
 
     for instruction in &instructions {
         println!("{}", instruction.to_string());
@@ -161,7 +225,7 @@ pub fn part2(input_file: &str) {
     println!("Trench dimensions: {} x {}", width, height);
 
     let mut trench = vec![vec!['.'; 4 * width]; 4 * height];
-    let mut position = (2 * width as i32, 2 * height as i32);
+    let mut position = (2 * width as i64, 2 * height as i64);
 
     let mut prev_direction = instructions[0].direction;
     for instruction in &instructions {
@@ -184,13 +248,13 @@ pub fn part2(input_file: &str) {
                 Direction::Left,
             ] {
                 let mut intersections = 0;
-                let mut current_position = (x as i32, y as i32);
+                let mut current_position = (x as i64, y as i64);
                 current_position = direction.translate(current_position);
                 let mut crossed_borders: Vec<char> = vec![];
                 while current_position.0 >= 0
                     && current_position.1 >= 0
-                    && current_position.0 < 4 * width as i32
-                    && current_position.1 < 4 * height as i32
+                    && current_position.0 < 4 * width as i64
+                    && current_position.1 < 4 * height as i64
                 {
                     let curr_char =
                         trench[current_position.1 as usize][current_position.0 as usize];
@@ -319,12 +383,12 @@ fn has_outside_neighbours(point: (usize, usize), trench: &Vec<Vec<char>>) -> boo
     neighbours.iter().any(|c| *c == 'O')
 }
 
-fn dig_hole_at(point: (i32, i32), trench: &mut Vec<Vec<char>>) {
+fn dig_hole_at(point: (i64, i64), trench: &mut Vec<Vec<char>>) {
     trench[point.1 as usize][point.0 as usize] = '#';
 }
 
 fn dig_hole_at_direction(
-    point: (i32, i32),
+    point: (i64, i64),
     trench: &mut Vec<Vec<char>>,
     direction: Direction,
     prev_direction: Direction,
@@ -363,13 +427,13 @@ fn read_instructions(input_file: &str) -> Vec<Instruction> {
 }
 
 fn calculate_trench_width(instructions: &Vec<Instruction>) -> usize {
-    let mut max_displacement: i32 = 0;
-    let mut displacement: i32 = 0;
+    let mut max_displacement: i64 = 0;
+    let mut displacement: i64 = 0;
 
     for instruction in instructions {
         match instruction.direction {
-            Direction::Left => displacement -= instruction.length as i32,
-            Direction::Right => displacement += instruction.length as i32,
+            Direction::Left => displacement -= instruction.length as i64,
+            Direction::Right => displacement += instruction.length as i64,
             _ => {}
         }
         if abs(displacement) > max_displacement {
@@ -380,13 +444,13 @@ fn calculate_trench_width(instructions: &Vec<Instruction>) -> usize {
 }
 
 fn calculate_trench_height(instructions: &Vec<Instruction>) -> usize {
-    let mut max_displacement: i32 = 0;
-    let mut displacement: i32 = 0;
+    let mut max_displacement: i64 = 0;
+    let mut displacement: i64 = 0;
 
     for instruction in instructions {
         match instruction.direction {
-            Direction::Up => displacement -= instruction.length as i32,
-            Direction::Down => displacement += instruction.length as i32,
+            Direction::Up => displacement -= instruction.length as i64,
+            Direction::Down => displacement += instruction.length as i64,
             _ => {}
         }
         if abs(displacement) > max_displacement {
