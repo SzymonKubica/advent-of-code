@@ -1,4 +1,8 @@
-use std::{collections::HashMap, mem::ManuallyDrop, cmp::{min, max}};
+use std::{
+    cmp::{max, min},
+    collections::HashMap,
+    mem::ManuallyDrop,
+};
 
 struct Workflow {
     name: String,
@@ -81,7 +85,10 @@ impl Rule {
     // and thus will be taken to the next workflow or accepted/rejected. It also
     // yields the range that didn't meet the condition and should thus be
     // propagated to the next rule in the current workflow.
-    fn apply_rule_ranged(&self, part: &mut RangedPart) -> (RangedPart, RuleApplicationOutcome, Option<RangedPart>) {
+    fn apply_rule_ranged(
+        &self,
+        part: &mut RangedPart,
+    ) -> (RangedPart, RuleApplicationOutcome, Option<RangedPart>) {
         if self.always_satisfied {
             return (part.clone(), self.outcome.clone(), None::<RangedPart>);
         }
@@ -89,7 +96,8 @@ impl Rule {
             RuleInequalityType::LessThan => {
                 let mut not_taken_range = part.clone();
                 // -+ 1 because the inequality is strict
-                let new_upper_bound = min(part.map[&self.tested_property].1, self.condition_bound - 1);
+                let new_upper_bound =
+                    min(part.map[&self.tested_property].1, self.condition_bound - 1);
                 part.map.get_mut(&self.tested_property).unwrap().1 = new_upper_bound;
 
                 // Now we need to assemble the other range
@@ -97,20 +105,28 @@ impl Rule {
                 // The upper bound stays the same and so in case of the
                 // condition_bound being larger than the current upper bound,
                 // the not taken range will be empty (ranging from higher to smaller number)
-                not_taken_range.map.get_mut(&self.tested_property).unwrap().0 = self.condition_bound;
+                not_taken_range
+                    .map
+                    .get_mut(&self.tested_property)
+                    .unwrap()
+                    .0 = self.condition_bound;
 
                 (part.clone(), self.outcome.clone(), Some(not_taken_range))
-
             }
             RuleInequalityType::GreaterThan => {
                 let mut not_taken_range = part.clone();
-                let new_lower_bound = max(part.map[&self.tested_property].0, self.condition_bound + 1);
+                let new_lower_bound =
+                    max(part.map[&self.tested_property].0, self.condition_bound + 1);
                 part.map.get_mut(&self.tested_property).unwrap().0 = new_lower_bound;
 
                 // Now we need to assemble the other range
                 // Similar as above, now the upper bound of the not taken
                 // range is the condition bound whereas the lower bound stays the same
-                not_taken_range.map.get_mut(&self.tested_property).unwrap().1 = self.condition_bound;
+                not_taken_range
+                    .map
+                    .get_mut(&self.tested_property)
+                    .unwrap()
+                    .1 = self.condition_bound;
                 (part.clone(), self.outcome.clone(), Some(not_taken_range))
             }
         }
@@ -271,7 +287,6 @@ struct Part {
     map: HashMap<PartProperty, u32>,
 }
 
-
 #[derive(Clone)]
 struct RangedPart {
     map: HashMap<PartProperty, (u32, u32)>,
@@ -282,10 +297,13 @@ impl RangedPart {
         self.map.iter().all(|(_k, v)| v.0 <= v.1)
     }
     fn count_combinations(&self) -> u64 {
-       if !self.ranges_valid() {
-           return 0;
-       }
-        self.map.iter().map(|(_k, v)| (v.1 - v.0 + 1) as u64).product()
+        if !self.ranges_valid() {
+            return 0;
+        }
+        self.map
+            .iter()
+            .map(|(_k, v)| (v.1 - v.0 + 1) as u64)
+            .product()
     }
 }
 
@@ -385,11 +403,16 @@ pub fn part1(input_file: &str) {
         println!("{}", part.to_string());
     }
 
-    let total_rating_sum = accepted_parts.iter().map(|p| p.map.iter().map(|(k, v)| v).sum::<u32>()).sum::<u32>();
-    println!("Total sum of ratings of accepted parts: {}", total_rating_sum);
+    let total_rating_sum = accepted_parts
+        .iter()
+        .map(|p| p.map.iter().map(|(k, v)| v).sum::<u32>())
+        .sum::<u32>();
+    println!(
+        "Total sum of ratings of accepted parts: {}",
+        total_rating_sum
+    );
 }
 pub fn part2(input_file: &str) {
-
     let (workflows, parts) = read_workflows_and_parts(input_file);
 
     for (name, workflow) in &workflows {
@@ -405,7 +428,9 @@ pub fn part2(input_file: &str) {
     let mut ranged_part = RangedPart {
         map: HashMap::new(),
     };
-    ranged_part.map.insert(PartProperty::ExtremelyCoolLooking, (1, 4000));
+    ranged_part
+        .map
+        .insert(PartProperty::ExtremelyCoolLooking, (1, 4000));
     ranged_part.map.insert(PartProperty::Musical, (1, 4000));
     ranged_part.map.insert(PartProperty::Aerodynamic, (1, 4000));
     ranged_part.map.insert(PartProperty::Shiny, (1, 4000));
@@ -440,5 +465,4 @@ pub fn part2(input_file: &str) {
     }
 
     println!("Total accepted combinations: {}", accepted_count);
-
 }
