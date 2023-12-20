@@ -284,9 +284,16 @@ pub fn part1(input_file: &str) {
     );
 }
 pub fn part2(input_file: &str) {
-    // this solution relies on the fact that rx is connected to a conjunction
+    // Part2 solution relies on the fact that rx is connected to a conjunction
     // so we can just check when all of its inputs will be high we can deduce that
     // rx will get a low pulse.
+    // One unclean aspect of it is that it relies on the assumption that all
+    // modules two levels below the rx module are conjunctions and everything
+    // behaves periodically so we can just use the LCM to calculate the lowest
+    // number of required button presses. In which case the behaviour of this
+    // function is heavily input-dependent and it probably wouldn't produce the
+    // right results in the general case.
+
     let mut configuration = read_configuration(input_file);
 
     for (_name, module) in configuration.iter() {
@@ -295,6 +302,8 @@ pub fn part2(input_file: &str) {
 
     let mut button_presses = 0;
 
+    // Find the only input that flows into rx. Here we rely on the puzzle input
+    // and the fact that there is only one such module that sends into rx.
     let rx_input = configuration
         .iter()
         .filter(|(_, m)| m.get_outputs().contains(&"rx".to_string()))
@@ -305,12 +314,15 @@ pub fn part2(input_file: &str) {
 
     println!("rx input: {}", rx_input);
 
-    let mut conjunction_inputs = configuration
+    // The conjunction inputs are the modules that send pulses to the rx_input.
+    // We assume here that they are conjunctions as well.
+    let conjunction_inputs = configuration
         .iter()
         .filter(|(_, m)| m.get_outputs().contains(&rx_input))
         .map(|(n, _)| n.clone())
         .collect::<Vec<String>>();
 
+    // The children of those conjunction inputs are also conjunctions modules
     let conj_inputs_children = conjunction_inputs
         .iter()
         .map(|i| {
@@ -325,6 +337,14 @@ pub fn part2(input_file: &str) {
         })
         .collect::<HashMap<String, Vec<String>>>();
 
+    // The grandchildren are the ones last level that we descend to and we stop
+    // at that level. During iteration of the while loop correspoinding to a
+    // single button press. We'll maintain the state of those granchildren and
+    // record the period after which they cause their parent (one of the
+    // children) to fire a low pulse down to one of the conj inputs.
+    // We also rely on the fact that each of the conj inputs children is the only child
+    // of the conj input and so the low signal will be immeidately propagated to
+    // the rx_input conjunction module.
     let conj_inputs_granchildren: HashMap<String, Vec<String>> = conj_inputs_children
         .iter()
         .map(|(i, ins)| ins.clone())
@@ -343,8 +363,9 @@ pub fn part2(input_file: &str) {
         })
         .collect();
 
-    // Records how often each grandchild wraps around
-    let mut multiples: HashMap<String, (usize, usize)> = HashMap::new();
+    // Records the period with which each of the conjunction input children
+    // sends the low pulse to its parent.
+    let mut periods: HashMap<String, usize> = HashMap::new();
 
     println!("conjunction_inputs children: {:?}", conj_inputs_children);
     println!(
@@ -352,14 +373,19 @@ pub fn part2(input_file: &str) {
         conj_inputs_granchildren
     );
 
-    for (input, children) in &conj_inputs_children {
+    for children in conj_inputs_children.values() {
         for g in children {
-            multiples.insert(g.clone(), (0, 0));
+            periods.insert(g.clone(), 0);
         }
     }
+
+    // We dynamically keep track of the emitted signals to know when all of
+    // the children of a particular conjunction input child are High, in which
+    // case it will fire a Low pulse up the tree.
     let mut conj_children_emmitted_signals: HashMap<String, HashMap<String, PulseType>> =
         HashMap::new();
 
+    // Initalise the emitted signals to low.
     for (input, children) in &conj_inputs_children {
         for child in children {
             conj_children_emmitted_signals.insert(child.to_string(), HashMap::new());
@@ -372,22 +398,7 @@ pub fn part2(input_file: &str) {
         }
     }
 
-    let mut conj_children_emmitted_signals: HashMap<String, HashMap<String, PulseType>> =
-        HashMap::new();
-
-    for (input, children) in &conj_inputs_children {
-        for child in children {
-            conj_children_emmitted_signals.insert(child.to_string(), HashMap::new());
-            for g in conj_inputs_granchildren.get(child).unwrap() {
-                conj_children_emmitted_signals
-                    .get_mut(child)
-                    .unwrap()
-                    .insert(g.clone(), PulseType::Low);
-            }
-        }
-    }
-
-    while multiples.iter().any(|(_k, v)| v.1 == 0) {
+    while periods.iter().any(|(_k, v)| v == &0) {
         // Press the button to initiate the broadcast
         let broadcaster = configuration.get_mut("broadcaster").unwrap();
         button_presses += 1;
@@ -405,9 +416,11 @@ pub fn part2(input_file: &str) {
         while !pulses.is_empty() {
             let current_pulse = pulses.pop_front().unwrap();
 
-            if conj_inputs_children
-                .iter()
-                .any(|(i, ins)| ins.contains(&current_pulse.receiver))
+            // Check if any of the children has received a signal from one of
+            // its grandchildren. If so, store the signal
+            if conj_inputs_children.
+                values()
+                .any(|v| v.contains(&current_pulse.receiver))
             {
                 *conj_children_emmitted_signals
                     .get_mut(&current_pulse.receiver)
@@ -425,43 +438,27 @@ pub fn part2(input_file: &str) {
                 pulses.push_back(pulse);
             }
 
+            // Perform a check to see if there is any child whose all children
+            // (i.e. grandchildren) are high. In which case the child would fire
+            // and so we record its period.
             for (child, grandchildren) in &conj_children_emmitted_signals {
                 if grandchildren.values().all(|v| v == &PulseType::High) {
-                    let m = multiples.get_mut(child).unwrap();
-                    if m == &(0, 0) {
-                        m.0 = button_presses;
-                    } else if let (first, 0) = *m {
-                        m.1 = button_presses;
-                    println!("Child {} wrapped around: ({}, {})", child, first, button_presses);
+                    let m = periods.get_mut(child).unwrap();
+                    if m == &0 {
+                        *m = button_presses;
+                        println!(
+                            "Child {} wrapped around after {} button presses",
+                            child, button_presses
+                        );
                     }
                 }
             }
         }
     }
 
-    let total_button_presses = conj_inputs_children
-        .values()
-        .map(|v| {
-            multiples
-                .iter()
-                .filter(|(k, v1)| conj_inputs_granchildren[&v[0]].contains(k))
-                .map(|(k, v)| v)
-                .map(|v| v.1 - v.0)
-                .fold(1, |acc, s| num::integer::lcm(acc, s))
-        })
-        .collect::<Vec<usize>>();
-
-    println!("Partial lcms: {:?}", total_button_presses);
-    println!(
-        "Total lcm: {}",
-        total_button_presses
-            .iter()
-            .fold(1, |acc, s| num::integer::lcm(acc, *s))
-    );
-
-    let total_button_presses = multiples
+    let total_button_presses = periods
         .iter()
-        .map(|(_k, v)| v.1)
+        .map(|(_k, v)| *v)
         .fold(1, |acc, s| num::integer::lcm(acc, s));
 
     println!(
