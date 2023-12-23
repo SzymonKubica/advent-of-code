@@ -26,6 +26,7 @@ mod day19;
 mod day20;
 mod day21;
 mod day22;
+mod day23;
 
 fn main() {
     let selected_day = std::env::args().nth(1).expect("no day selected");
@@ -55,6 +56,7 @@ fn main() {
         (day20::part1, day20::part2),
         (day21::part1, day21::part2),
         (day22::part1, day22::part2),
+        (day23::part1, day23::part2),
     ];
 
     if let Ok(day) = selected_day.parse::<usize>() {
