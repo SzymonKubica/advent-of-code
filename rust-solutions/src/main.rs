@@ -3,6 +3,7 @@ use std::vec;
 extern crate enum_iterator;
 extern crate nom;
 extern crate num;
+extern crate rand;
 
 mod day1;
 mod day2;
