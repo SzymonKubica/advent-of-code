@@ -91,10 +91,10 @@ fn search_row(row: &[char]) -> usize {
 
     let mut occurrences = 0;
     for i in 0..(row.len() - 3) {
-        if let ['X', 'M', 'A', 'S'] = row[i..(i+4)] {
+        if let ['X', 'M', 'A', 'S'] = row[i..(i + 4)] {
             occurrences += 1;
         }
-        if let ['S', 'A', 'M', 'X'] = row[i..(i+4)] {
+        if let ['S', 'A', 'M', 'X'] = row[i..(i + 4)] {
             occurrences += 1;
         }
     }
@@ -102,7 +102,74 @@ fn search_row(row: &[char]) -> usize {
     occurrences
 }
 
-pub fn part2(input_file: &str) {}
+pub fn part2(input_file: &str) {
+    let word_search: WordSearch = read_word_search(input_file);
+    println!("{}", word_search);
+    let mut total_occurrences: usize = 0;
+
+    let grid = word_search.0;
+
+    for i in 0..grid.len() - 2 {
+        for j in 0..grid[0].len() - 2 {
+            let window = grid[i..i + 3]
+                .iter()
+                .map(|r| r[j..j + 3].to_vec())
+                .collect();
+            if is_x_mas(&window) {
+                total_occurrences += 1;
+            }
+        }
+    }
+    println!("Total occurrences of 'X-MAS': {}", total_occurrences);
+}
+
+fn is_x_mas(window: &Vec<Vec<char>>) -> bool {
+    let mask = vec![
+        vec!['M', '.', 'S'],
+        vec!['.', 'A', '.'],
+        vec!['M', '.', 'S'],
+    ];
+
+    matches(window, &mask)
+        || matches(window, &rotate_vec(&mask))
+        || matches(window, &rotate_vec(&rotate_vec(&mask)))
+        || matches(window, &rotate_vec(&rotate_vec(&rotate_vec(&mask))))
+}
+
+fn print_window(window: &Vec<Vec<char>>) {
+    for row in window {
+        println!("{}", row.iter().collect::<String>());
+    }
+}
+
+fn matches(window: &Vec<Vec<char>>, mask: &Vec<Vec<char>>) -> bool {
+    println!("Checking window: ");
+    print_window(&window);
+    println!("Against mask: ");
+    print_window(&mask);
+
+    window[0][0] == mask[0][0]
+        && window[1][1] == mask[1][1]
+        && window[2][2] == mask[2][2]
+        && window[2][0] == mask[2][0]
+        && window[0][2] == mask[0][2]
+}
+
+fn rotate_vec(v: &Vec<Vec<char>>) -> Vec<Vec<char>> {
+    let height = v.len();
+    let width = v[0].len();
+
+    let mut output_vec = vec![];
+    for x in (0..width).rev() {
+        let mut column = vec![];
+        for y in 0..height {
+            column.push(v[y][x]);
+        }
+        output_vec.push(column);
+    }
+
+    output_vec
+}
 
 fn read_word_search(input_file: &str) -> WordSearch {
     let file_content = fs::read_to_string(input_file).unwrap();
