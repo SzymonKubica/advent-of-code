@@ -13,16 +13,7 @@ pub fn part1(input_file: &str) {
             .join("")
     );
 
-    let disk_layout_after_compaction = disk_layout
-        .into_iter()
-        .filter_map(|pos| {
-            if let DiskPosition::File(_b) = pos {
-                Some(pos.clone())
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<DiskPosition>>();
+    let disk_layout_after_compaction = perform_compaction(disk_layout);
 
     println!(
         "Disk layout after compaction:\n{}",
@@ -37,24 +28,104 @@ pub fn part1(input_file: &str) {
     println!("Checksum: {}", checksum);
 }
 
-fn calculate_checksum(disk_layout_after_compaction: Vec<DiskPosition>) -> usize {
-    let mut current_position = 0;
-    let mut checksum = 0;
-    for pos in disk_layout_after_compaction {
-        match pos {
-            DiskPosition::Empty(e) => {
-                current_position += e.length;
-            },
-            DiskPosition::File(f) => {
-                checksum += f.id * current_position * f.length;
-                current_position += f.length;
+fn perform_compaction(disk_layout: Vec<DiskPosition>) -> Vec<DiskPosition> {
+    let mut back_index = disk_layout.len() - 1;
+    let mut front_index = 0;
+
+    let mut output: Vec<DiskPosition> = vec![];
+
+    while front_index <= back_index {
+        match disk_layout[front_index] {
+            DiskPosition::Empty => {
+                while !matches!(disk_layout[back_index], DiskPosition::FileBlock(_)) {
+                    back_index -= 1;
+                }
+                output.push(disk_layout[back_index]);
+                back_index -= 1;
+            }
+            DiskPosition::FileBlock(_) => {
+                output.push(disk_layout[front_index]);
+            }
+            DiskPosition::ContiguousFileStart(_, _) => panic!("This should not happen"),
+        };
+        front_index += 1;
+    }
+    output
+}
+
+fn perform_compaction_part2(disk_layout: Vec<DiskPosition>) -> Vec<DiskPosition> {
+    let mut output: Vec<DiskPosition> = disk_layout.clone();
+
+    let files_indices: Vec<usize> = output
+        .iter()
+        .enumerate()
+        .filter(|(i, pos)| matches!(pos, DiskPosition::ContiguousFileStart(_, _)))
+        .map(|(i, pos)| i)
+        .rev()
+        .collect();
+
+    'outer: for i in files_indices {
+        let DiskPosition::ContiguousFileStart(id, len) = disk_layout[i] else {
+            panic!("This should not happen")
+        };
+        // We only try to move the file to the left
+        for j in 0..i {
+            if output[j..(j + len)]
+                .iter()
+                .all(|pos| matches!(pos, DiskPosition::Empty))
+            {
+                output[j] = DiskPosition::ContiguousFileStart(id, len);
+                for k in 1..len {
+                    output[j + k] = DiskPosition::FileBlock(id);
+                }
+                for k in 0..len {
+                    output[i + k] = DiskPosition::Empty;
+                }
+                continue 'outer;
             }
         }
     }
-    checksum
-
+    output
 }
-pub fn part2(input_file: &str) {}
+
+fn calculate_checksum(disk_layout_after_compaction: Vec<DiskPosition>) -> usize {
+    disk_layout_after_compaction
+        .iter()
+        .enumerate()
+        .map(|(i, pos)| match pos {
+            DiskPosition::Empty => 0,
+            DiskPosition::FileBlock(id) => i * id,
+            DiskPosition::ContiguousFileStart(id, len) => i * id,
+        })
+        .sum::<usize>()
+}
+pub fn part2(input_file: &str) {
+    let input = fs::read_to_string(input_file).unwrap();
+    let disk_layout = parse_disk_layout_part2(input.lines().nth(0).unwrap());
+    println!("Parsed disk layout representation: {:?}", disk_layout);
+    println!(
+        "Disk layout visualization:\n{}",
+        disk_layout
+            .iter()
+            .map(|pos| format!("{}", pos))
+            .collect::<Vec<String>>()
+            .join("")
+    );
+
+    let disk_layout_after_compaction = perform_compaction_part2(disk_layout);
+
+    println!(
+        "Disk layout after compaction:\n{}",
+        disk_layout_after_compaction
+            .iter()
+            .map(|pos| format!("{}", pos))
+            .collect::<Vec<String>>()
+            .join("")
+    );
+
+    let checksum = calculate_checksum(disk_layout_after_compaction);
+    println!("Checksum: {}", checksum);
+}
 
 fn parse_disk_layout(input: &str) -> Vec<DiskPosition> {
     return input
@@ -62,60 +133,48 @@ fn parse_disk_layout(input: &str) -> Vec<DiskPosition> {
         .map(|(i, c)| (i, c.to_digit(10).unwrap() as usize))
         .map(|(i, d)| {
             if i % 2 == 0 {
-                DiskPosition::File(BlockFile::new(i / 2, d))
+                vec![DiskPosition::FileBlock(i / 2)].repeat(d)
             } else {
-                DiskPosition::Empty(EmptySpace::new(d))
+                vec![DiskPosition::Empty].repeat(d)
             }
         })
+        .flatten()
+        .collect();
+}
+
+fn parse_disk_layout_part2(input: &str) -> Vec<DiskPosition> {
+    return input
+        .char_indices()
+        .map(|(i, c)| (i, c.to_digit(10).unwrap() as usize))
+        .map(|(i, d)| {
+            if i % 2 == 0 {
+                let mut file = vec![DiskPosition::ContiguousFileStart(i / 2, d)];
+                file.append(&mut vec![DiskPosition::FileBlock(i / 2)].repeat(d - 1));
+                file
+            } else {
+                vec![DiskPosition::Empty].repeat(d)
+            }
+        })
+        .flatten()
         .collect();
 }
 
 #[derive(Debug, Copy, Clone)]
 enum DiskPosition {
-    Empty(EmptySpace),
-    File(BlockFile),
+    Empty,
+    FileBlock(usize),
+    ContiguousFileStart(Id, Length),
 }
+
+type Id = usize;
+type Length = usize;
 
 impl Display for DiskPosition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DiskPosition::Empty(e) => write!(f, "{}", e),
-            DiskPosition::File(b) => write!(f, "{}", b),
+            DiskPosition::Empty => write!(f, "."),
+            DiskPosition::FileBlock(b) => write!(f, "{}", b),
+            DiskPosition::ContiguousFileStart(id, _len) => write!(f, "{}", id),
         }
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-struct EmptySpace {
-    length: usize,
-}
-
-impl EmptySpace {
-    fn new(length: usize) -> Self {
-        Self { length }
-    }
-}
-
-impl Display for EmptySpace {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&".".repeat(self.length))
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-struct BlockFile {
-    id: usize,
-    length: usize,
-}
-
-impl BlockFile {
-    fn new(id: usize, length: usize) -> Self {
-        Self { id, length }
-    }
-}
-
-impl Display for BlockFile {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!("{}", self.id).repeat(self.length))
     }
 }
