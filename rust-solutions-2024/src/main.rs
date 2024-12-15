@@ -6,6 +6,8 @@ extern crate num;
 extern crate num_integer;
 extern crate rand;
 
+mod utils;
+
 mod day1;
 mod day2;
 mod day3;
@@ -16,6 +18,7 @@ mod day7;
 mod day8;
 mod day9;
 mod day10;
+mod day11;
 
 fn main() {
     let selected_day = std::env::args().nth(1).expect("no day selected");
@@ -33,6 +36,7 @@ fn main() {
         (day8::part1, day8::part2),
         (day9::part1, day9::part2),
         (day10::part1, day10::part2),
+        (day11::part1, day11::part2),
     ];
 
     if let Ok(day) = selected_day.parse::<usize>() {
