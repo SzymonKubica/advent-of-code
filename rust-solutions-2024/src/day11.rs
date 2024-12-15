@@ -1,43 +1,60 @@
 use std::{collections::HashMap, fmt::Display, fs};
 
 pub fn part1(input_file: &str) {
-    let steps = 15;
+    let steps = 25;
     let input = fs::read_to_string(input_file).unwrap();
-    let mut stones = parse_stones(&input);
-    println!("Initial stones: {:?}", stones);
-    let mut cache: std::collections::HashMap<MagicStone, Vec<MagicStone>> = HashMap::new();
-    for i in 0..steps {
-        println!("Big step: {}", i);
-        let mut stones2 = vec![];
-        for stone in &stones {
-            if cache.contains_key(&stone) {
-                stones2.extend(cache.get(&stone).unwrap().clone());
-            } else {
-                let mut new_stones = vec![(*stone).clone()];
-                for j in 0..5 {
-                    new_stones = new_stones.iter().map(MagicStone::transform).flatten().collect();
-                }
-                cache.insert(*stone, new_stones.clone());
-                stones2.extend(new_stones.clone());
-            }
-        }
-        stones = stones2;
-    }
-    println!("Found {} stones after {} steps:", stones.len(), steps);
-    //print_stones(&stones);
+    let mut stones: HashMap<MagicStone, u64> =
+        parse_stones(&input).into_iter().map(|s| (s, 1)).collect();
+    calculate_stones_after(steps, &mut stones)
 }
 
-fn print_stones(stones: &Vec<MagicStone>) {
-    println!(
-            "{}",
-            stones
-                .iter()
-                .map(|s| format!("{}", s))
-                .collect::<Vec<String>>()
-                .join(" ")
-        );
+pub fn part2(input_file: &str) {
+    let steps = 75;
+    let input = fs::read_to_string(input_file).unwrap();
+    let mut stones: HashMap<MagicStone, u64> =
+        parse_stones(&input).into_iter().map(|s| (s, 1)).collect();
+    calculate_stones_after(steps, &mut stones)
 }
-pub fn part2(input_file: &str) {}
+
+
+fn calculate_stones_after(steps: u32, stones: &mut HashMap<MagicStone, u64>) {
+    println!("Initial stones: {:?}", stones);
+    let mut mutated_stones = stones.clone();
+    for _ in 0..steps {
+        print_stones(&stones);
+        mutated_stones = mutated_stones
+            .iter()
+            .map(|(stone, count)| {
+                stone
+                    .transform()
+                    .into_iter()
+                    .map(|s| (s, *count))
+                    .collect::<Vec<(MagicStone, u64)>>()
+            })
+            .flatten()
+            .fold(HashMap::new(), |mut acc, stone| {
+              let count = acc.entry(stone.0).or_insert(0);
+              *count += stone.1;
+              acc
+            })
+    }
+    println!("Unique stones after {} steps:", steps);
+    print_stones(&mutated_stones);
+    let stones_count: u64 = mutated_stones.iter().map(|(_, count)| count).sum();
+    println!("Total stones: {}", stones_count);
+
+}
+
+fn print_stones(stones: &HashMap<MagicStone, u64>) {
+    println!(
+        "{}",
+        stones
+            .iter()
+            .map(|s| format!("{}", s.0))
+            .collect::<Vec<String>>()
+            .join(" ")
+    );
+}
 
 fn parse_stones(input: &str) -> Vec<MagicStone> {
     input
@@ -50,7 +67,7 @@ fn parse_stones(input: &str) -> Vec<MagicStone> {
         .collect()
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 struct MagicStone(u64);
 
 impl MagicStone {
