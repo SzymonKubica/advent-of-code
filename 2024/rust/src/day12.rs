@@ -1,6 +1,6 @@
 use std::{collections::HashSet, fmt::Display, fs};
 
-use crate::utils::Point;
+use crate::utilities::Point;
 
 pub fn part1(input_file: &str) {
     let input = fs::read_to_string(input_file).unwrap();

@@ -61,11 +61,12 @@ impl Point {
     }
 
     pub fn is_within_grid<T>(&self, grid: &Vec<Vec<T>>) -> bool {
-        grid.len() > 0
-            && grid[0].len() > 0
+        !grid.is_empty()
+            && !grid[0].is_empty()
             && self.x >= 0
             && self.y >= 0
             && (self.y as usize) < grid.len()
             && (self.x as usize) < grid[0].len()
     }
 }
+

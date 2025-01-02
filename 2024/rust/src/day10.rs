@@ -1,6 +1,6 @@
 use std::{collections::HashSet, fmt::Display, fs};
 
-use crate::utils::Point;
+use crate::utilities::Point;
 
 pub fn part1(input_file: &str) {
     let mut aggregate_trailhead_score: u32 = 0;

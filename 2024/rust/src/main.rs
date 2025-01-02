@@ -6,7 +6,7 @@ extern crate num;
 extern crate num_integer;
 extern crate rand;
 
-mod utils;
+extern crate utilities;
 
 mod day1;
 mod day2;
