@@ -35,16 +35,13 @@ An example cmd line using that run script can be seen below:
 ```
 Where the arguments in order specify the day for which we want to run the solution,
 the part of the puzzle that is to be executed and optional paths to the input and
-output files. If the output and input files are not provided, the script should
-default ot printing output to the console and sourcing it from the file under:
+output files. If the input file is not provided, the script should
+default to sourcing its input from the file under:
 ```
 ./<year>/input-files/day-<day>-puzzle-input
 ```
-
 The run script should instruct the target language which day should be executed,
 if we need to use the part 1 or part 2 logic and where to find the input.
-
-TODO: implement the default input file sourcing.
 
 
 
