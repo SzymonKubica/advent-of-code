@@ -26,11 +26,6 @@ def rename_file(file_name: str):
     print(new_file_name)
     os.rename(file_name, new_file_name)
 
-
-
-
-
-
 if __name__ == "__main__":
     main()
 
