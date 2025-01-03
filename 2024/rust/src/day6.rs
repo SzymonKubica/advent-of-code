@@ -1,6 +1,6 @@
 use std::{fmt::Display, fs, io::Empty};
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let contents = fs::read_to_string(input_file);
 
     // Grid needs to be mutable because ultimately we need to replace the
@@ -70,7 +70,7 @@ fn find_guard(grid: &Grid) -> Option<Guard> {
     }
     None
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let contents = fs::read_to_string(input_file);
 
     // Grid needs to be mutable because ultimately we need to replace the

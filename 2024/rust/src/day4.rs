@@ -1,7 +1,7 @@
 use core::fmt;
 use std::fs;
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let word_search: WordSearch = read_word_search(input_file);
     println!("{}", word_search);
     let mut total_occurrences: usize = 0;
@@ -102,7 +102,7 @@ fn search_row(row: &[char]) -> usize {
     occurrences
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let word_search: WordSearch = read_word_search(input_file);
     println!("{}", word_search);
     let mut total_occurrences: usize = 0;

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs};
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let (mut nums1, mut nums2) = read_lists(input_file);
     nums1.sort();
     nums2.sort();
@@ -10,7 +10,7 @@ pub fn part1(input_file: &str) {
     print!("Difference: {}\n", difference)
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let (nums1, nums2) = read_lists(input_file);
 
 

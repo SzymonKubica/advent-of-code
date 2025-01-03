@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs};
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let reports = read_reports(input_file);
     let safe_reports_count = reports.into_iter().filter(|r| is_safe(r)).count();
     println!("Safe reports: {}", safe_reports_count)
@@ -38,7 +38,7 @@ fn step_check(report: &Report) -> bool {
     return true;
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let reports = read_reports(input_file);
     let safe_reports_count = reports
         .into_iter()

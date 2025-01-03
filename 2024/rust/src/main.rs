@@ -28,19 +28,19 @@ fn main() {
     let input_file = std::env::args().nth(3).expect("no input file given");
 
     let available_days: Vec<(fn(&str) -> (), fn(&str) -> ())> = vec![
-        (day1::part1, day1::part2),
-        (day2::part1, day2::part2),
-        (day3::part1, day3::part2),
-        (day4::part1, day4::part2),
-        (day5::part1, day5::part2),
-        (day6::part1, day6::part2),
-        (day7::part1, day7::part2),
-        (day8::part1, day8::part2),
-        (day9::part1, day9::part2),
-        (day10::part1, day10::part2),
-        (day11::part1, day11::part2),
-        (day12::part1, day12::part2),
-        (day13::part1, day13::part2),
+        (day1::first_part, day1::second_part),
+        (day2::first_part, day2::second_part),
+        (day3::first_part, day3::second_part),
+        (day4::first_part, day4::second_part),
+        (day5::first_part, day5::second_part),
+        (day6::first_part, day6::second_part),
+        (day7::first_part, day7::second_part),
+        (day8::first_part, day8::second_part),
+        (day9::first_part, day9::second_part),
+        (day10::first_part, day10::second_part),
+        (day11::first_part, day11::second_part),
+        (day12::first_part, day12::second_part),
+        (day13::first_part, day13::second_part),
     ];
 
     if let Ok(day) = selected_day.parse::<usize>() {

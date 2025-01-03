@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Display, fs, os::unix::thread, thread::slee
 
 use crate::utilities::Point;
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let mut aggregate_trailhead_score: u32 = 0;
     let input = fs::read_to_string(input_file).unwrap();
     let topographic_map = read_topographic_map(&input);
@@ -26,7 +26,7 @@ pub fn part1(input_file: &str) {
     println!("Total trailhead score: {}", aggregate_trailhead_score);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let mut aggregate_trailhead_score: u32 = 0;
     let input = fs::read_to_string(input_file).unwrap();
     let topographic_map = read_topographic_map(&input);

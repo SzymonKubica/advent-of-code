@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display, fs};
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let input = fs::read_to_string(input_file).unwrap();
     let mut map = parse_grid(&input);
 
@@ -46,7 +46,7 @@ pub fn part1(input_file: &str) {
 
     println!("Unique antinodes: {}", antinodes_number);
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let input = fs::read_to_string(input_file).unwrap();
     let mut map = parse_grid(&input);
 

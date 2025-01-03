@@ -2,7 +2,7 @@ use core::fmt;
 use std::fs;
 
 // xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let input = fs::read_to_string(input_file).unwrap();
     let mut line = input.as_str();
 
@@ -62,7 +62,7 @@ pub fn part1(input_file: &str) {
     println!("Sum of all well-formed expressions: {}", result);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let input = fs::read_to_string(input_file).unwrap();
     let mut line = input.as_str();
 

@@ -1,6 +1,6 @@
 use std::{fmt::Display, fs};
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let input = fs::read_to_string(input_file).unwrap();
     let disk_layout = parse_disk_layout(input.lines().nth(0).unwrap());
     println!("Parsed disk layout representation: {:?}", disk_layout);
@@ -99,7 +99,7 @@ fn calculate_checksum(disk_layout_after_compaction: Vec<DiskPosition>) -> usize 
         })
         .sum::<usize>()
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let input = fs::read_to_string(input_file).unwrap();
     let disk_layout = parse_disk_layout_part2(input.lines().nth(0).unwrap());
     println!("Parsed disk layout representation: {:?}", disk_layout);

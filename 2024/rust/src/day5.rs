@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let (rules, updates) = parse_rules_and_updates(input_file);
     println!("Rules:\n{:?}", rules);
     println!("Updates:\n{:?}", updates);
@@ -19,7 +19,7 @@ pub fn part1(input_file: &str) {
     println!("Sum of middle elements: {}", sum);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let (rules, mut updates) = parse_rules_and_updates(input_file);
     println!("Rules:\n{:?}", rules);
     println!("Updates:\n{:?}", updates);

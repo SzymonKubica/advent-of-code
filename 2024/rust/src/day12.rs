@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Display, fs};
 
 use crate::utilities::Point;
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let input = fs::read_to_string(input_file).unwrap();
     let compact_farm_land = parse_farm_land(&input);
     println!("Original farm land: ");
@@ -170,7 +170,7 @@ fn dilate(compact_farm_land: Vec<Vec<LandLocation>>) -> Vec<Vec<LandLocation>> {
     output
 }
 
-pub fn part2(input_file: &str) {}
+pub fn second_part(input_file: &str) {}
 
 fn parse_farm_land(input: &str) -> Vec<Vec<LandLocation>> {
     input

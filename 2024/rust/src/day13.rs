@@ -1,12 +1,12 @@
 use std::fs;
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
 }
 
 
 
 
-pub fn part2(input_file: &str) {}
+pub fn second_part(input_file: &str) {}
 
 struct Button(i32, i32);
 

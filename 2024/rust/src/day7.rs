@@ -1,6 +1,6 @@
 use std::{fs, vec};
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let input = fs::read_to_string(input_file).unwrap();
     let equations: Vec<CalibrationEquation> =
         input.lines().map(CalibrationEquation::from).collect();
@@ -15,7 +15,7 @@ pub fn part1(input_file: &str) {
     let calibration_sum: usize = satisfiable.iter().map(|eq| eq.expected_output).sum();
     println!("Calibration sum: {}", calibration_sum);
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let input = fs::read_to_string(input_file).unwrap();
     let equations: Vec<CalibrationEquation> =
         input.lines().map(CalibrationEquation::from).collect();

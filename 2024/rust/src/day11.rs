@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display, fs};
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let steps = 25;
     let input = fs::read_to_string(input_file).unwrap();
     let mut stones: HashMap<MagicStone, u64> =
@@ -8,7 +8,7 @@ pub fn part1(input_file: &str) {
     calculate_stones_after(steps, &mut stones)
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let steps = 75;
     let input = fs::read_to_string(input_file).unwrap();
     let mut stones: HashMap<MagicStone, u64> =
