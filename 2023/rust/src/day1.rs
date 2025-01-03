@@ -4,11 +4,11 @@ use std::fs;
 // digit. It is supposed to return the sum of the double digit numbers (calibration values)
 // created by sticking together the first and last digits on each line.
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     get_calibration_value(input_file, get_digit);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     get_calibration_value(input_file, get_digit_or_spelled_out);
 }
 

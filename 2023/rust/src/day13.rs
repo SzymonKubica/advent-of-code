@@ -8,7 +8,7 @@ fn read_patterns(input_file: &str) -> Vec<Vec<Vec<char>>> {
         .collect()
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let patterns = read_patterns(input_file);
 
     let summarized_pattern_notes: usize = patterns.iter().map(|p| get_pattern_note(p)).sum();
@@ -66,7 +66,7 @@ fn get_vertical_reflection_location(pattern: &Vec<Vec<char>>) -> Option<usize> {
     get_horizontal_reflection_index(&transpose)
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let patterns = read_patterns(input_file);
 
     let summarized_pattern_notes: usize = patterns

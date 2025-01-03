@@ -1,6 +1,6 @@
 use std::collections::{BinaryHeap, HashMap};
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let mut grid = read_grid(input_file);
 
     println!("\n");
@@ -240,7 +240,7 @@ fn read_grid(input_file: &str) -> Vec<Vec<usize>> {
         .collect()
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let mut grid = read_grid(input_file);
 
     println!("\n");

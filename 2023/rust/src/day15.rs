@@ -84,7 +84,7 @@ fn hash_string(string: &str) -> u32 {
     value
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let steps = read_steps(input_file);
 
     let sum: u32 = steps.iter().map(|s| hash_string(s)).sum();
@@ -92,7 +92,7 @@ pub fn part1(input_file: &str) {
     println!("Verification sum {}", sum);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let steps = read_steps(input_file);
 
     let operations = steps

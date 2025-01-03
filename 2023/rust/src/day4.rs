@@ -7,7 +7,7 @@ struct Card {
     pub card_numbers: Vec<i32>,
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let cards = read_cards(input_file);
 
     let total_cards_value = cards
@@ -19,7 +19,7 @@ pub fn part1(input_file: &str) {
     println!("Total cards value: {}", total_cards_value);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let mut card_copies_counts: HashMap<usize, usize> = HashMap::new();
     let cards = read_cards(input_file);
 

@@ -19,7 +19,7 @@ fn show_galaxy_map(map: &Vec<Vec<char>>) -> String {
         .collect::<Vec<String>>()
         .join("\n")
 }
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let galaxy_map = read_galaxy_map(input_file);
 
     println!("Galaxy map: \n{}", show_galaxy_map(&galaxy_map));
@@ -135,7 +135,7 @@ fn expand_galaxy_map(galaxy_map: Vec<Vec<char>>) -> Vec<Vec<char>> {
 
     expanded_galaxy_map
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let galaxy_map = read_galaxy_map(input_file);
 
     println!("Galaxy map: \n{}", show_galaxy_map(&galaxy_map));

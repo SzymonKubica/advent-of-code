@@ -476,11 +476,11 @@ fn find_max_hike_length_no_slope(map: &Vec<Vec<Tile>>) {
     );
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let map = read_map(input_file);
     find_max_hike_length(&map);
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let map = read_map_no_slopes(input_file);
     find_max_hike_length_no_slope(&map);
 }

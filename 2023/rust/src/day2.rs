@@ -25,7 +25,7 @@ enum Color {
     Blue,
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let games = parse_games(input_file);
     let sum_of_valid_game_ids: i32 = games
         .iter()
@@ -36,7 +36,7 @@ pub fn part1(input_file: &str) {
     println!("Sum of valid game IDs: {}", sum_of_valid_game_ids);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let games = parse_games(input_file);
     let sum_of_minimum_sets_powers: i32 = games
         .iter()

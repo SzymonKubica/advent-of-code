@@ -123,7 +123,7 @@ fn transpose(platform: &Vec<Vec<Option<Rock>>>) -> Vec<Vec<Option<Rock>>> {
     }
     result
 }
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     println!("Original platform: ");
     let platform = load_platform(input_file);
     print_platform(&platform);
@@ -167,7 +167,7 @@ fn convergence_check(
     }
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     println!("Original platform: ");
     let mut platform = load_platform(input_file);
 

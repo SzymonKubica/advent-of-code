@@ -11,7 +11,7 @@ fn get_engine_schematic(input_file: &str) -> Vec<Vec<char>> {
         .collect()
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let engine_schematic = get_engine_schematic(input_file);
     // The schematic is rectangular so the row length is uniform for all rows.
     let row_length: usize = engine_schematic[0].len();
@@ -67,7 +67,7 @@ struct Part {
     pub symbol: char,
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let engine_schematic = get_engine_schematic(input_file);
     // The schematic is rectangular so the row length is uniform for all rows.
     let row_length: usize = engine_schematic[0].len();

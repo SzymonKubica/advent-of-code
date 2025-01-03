@@ -1,6 +1,6 @@
 use std::fs;
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let races = read_races(input_file);
 
     let total_possibilities: u64 = races.iter().map(|r| r.count_winning_strategies()).product();
@@ -11,7 +11,7 @@ pub fn part1(input_file: &str) {
     );
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let race = read_race_bad_kerning(input_file);
 
     let total_possibilities = race.count_winning_strategies();

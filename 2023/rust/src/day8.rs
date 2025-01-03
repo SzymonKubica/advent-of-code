@@ -48,7 +48,7 @@ fn parse_node_line(line: &str) -> (String, Node) {
     (node, Node { left, right })
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let (turns, nodes) = parse_map(&input_file);
 
     println!("Turns: {:?}", turns);
@@ -72,7 +72,7 @@ pub fn part1(input_file: &str) {
     println!("Total steps required: {}", steps);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let (turns, nodes) = parse_map(&input_file);
 
     let curr_nodes = nodes

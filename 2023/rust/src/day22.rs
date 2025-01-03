@@ -192,7 +192,7 @@ fn find_support_sets(bricks: &mut Vec<Brick>) -> HashMap<usize, HashSet<usize>> 
     support_sets
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let mut bricks = read_brick_snapshot(input_file);
     for brick in &bricks {
         println!("{}", brick.to_string());
@@ -229,7 +229,7 @@ pub fn part1(input_file: &str) {
 // any brick that is in its support sets that isn't contained in any other
 // support set. If so, the brick can't be disintegrated.
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let mut bricks = read_brick_snapshot(input_file);
     for brick in &bricks {
         println!("{}", brick.to_string());

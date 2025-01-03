@@ -229,7 +229,7 @@ fn read_configuration(input_file: &str) -> HashMap<String, Box<dyn Module>> {
     modules
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let mut configuration = read_configuration(input_file);
 
     for (_name, module) in configuration.iter() {
@@ -283,7 +283,7 @@ pub fn part1(input_file: &str) {
         low_pulses_count as u64 * high_pulses_count
     );
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     // Part2 solution relies on the fact that rx is connected to a conjunction
     // so we can just check when all of its inputs will be high we can deduce that
     // rx will get a low pulse.

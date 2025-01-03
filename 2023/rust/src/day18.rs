@@ -102,7 +102,7 @@ impl ToString for Instruction {
     }
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let instructions = read_instructions(input_file);
 
     for instruction in &instructions {
@@ -176,7 +176,7 @@ pub fn part1(input_file: &str) {
     println!("Area of the trench: {}", dug_holes_count);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let instructions = read_instructions(input_file);
     for instruction in &instructions {
         println!("{}", instruction.to_string());

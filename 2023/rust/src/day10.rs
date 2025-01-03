@@ -115,7 +115,7 @@ fn get_pipes(input_file: &str) -> Vec<Vec<PipeSegment>> {
         .collect()
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let pipe_map = get_pipes(input_file);
 
     // Find the starting point
@@ -192,7 +192,7 @@ pub fn part1(input_file: &str) {
         (steps + 1) / 2
     );
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let pipe_map = get_pipes(input_file);
 
     // Find the starting point

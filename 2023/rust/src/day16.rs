@@ -168,7 +168,7 @@ fn trace_ray_through_grid(ray: &mut Ray, grid: &mut Vec<Vec<GridCell>>, history:
     }
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let mut grid = read_grid(input_file);
 
     for row in &grid {
@@ -208,7 +208,7 @@ pub fn part1(input_file: &str) {
     println!("Energised tiles: {}", energised_tiles_count);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let grid = read_grid(input_file);
 
     let mut initial_configurations: Vec<Ray> = vec![];

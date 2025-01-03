@@ -36,7 +36,7 @@ fn read_nodes(input_file: &str) -> HashMap<String, Node> {
         .map(|n| (n.name.clone(), n))
         .collect()
 }
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let mut nodes = read_nodes(input_file);
     println!("{}", "Input");
     for (name, node) in nodes.iter() {
@@ -332,4 +332,4 @@ fn shortest_path(
     path
 }
 
-pub fn part2(input_file: &str) {}
+pub fn second_part(input_file: &str) {}

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs};
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let mut hands = read_hands(input_file);
 
     println!("Initial hands:");
@@ -170,7 +170,7 @@ impl Hand {
 // Part 2 requires different logic for ordering hands and so it is done here
 // to avoid confusion with the duplication.
 // TODO: learn generics to avoid duplication.
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let mut hands = read_hands_with_joker(input_file);
 
     println!("Initial hands:");

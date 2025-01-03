@@ -277,7 +277,7 @@ fn get_first_unknown_index(springs: &Vec<Spring>) -> Option<usize> {
         .filter_map(|(i, s)| if s == &Spring::Unknown { Some(i) } else { None })
         .nth(0)
 }
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let condition_records = read_condition_records(input_file);
 
     let mut combinations: Vec<usize> = vec![];
@@ -290,7 +290,7 @@ pub fn part1(input_file: &str) {
     println!("Total sum of combinations: {}", sum_of_combinations);
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let condition_records = read_unfolded_condition_records(input_file);
 
     let mut combinations: Vec<usize> = vec![];

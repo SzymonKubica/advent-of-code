@@ -25,7 +25,7 @@ impl RangedMap {
     }
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let (seeds, maps) = read_seeds_and_mappings(input_file);
 
     let mut seeds_locations: Vec<u64> = vec![];
@@ -44,7 +44,7 @@ pub fn part1(input_file: &str) {
     );
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let (seeds_encoding, maps) = read_seeds_and_mappings(input_file);
 
     let seeds_from_ranges = find_all_seeds_given_range_encoding(seeds_encoding);

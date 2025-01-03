@@ -111,7 +111,7 @@ fn read_garden_map(input_file: &str) -> Vec<Vec<char>> {
         .collect()
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     part1_helper(input_file, 64);
 }
 
@@ -197,7 +197,7 @@ fn find_start(garden_map: &Vec<Vec<char>>) -> Option<(i32, i32)> {
     }
     None
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     part1_helper(input_file, 65);
     part1_helper(input_file, 64);
     part1_helper(input_file, 131);

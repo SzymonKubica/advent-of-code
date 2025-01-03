@@ -167,7 +167,7 @@ fn read_input(input_file: &str) -> Vec<HailStone> {
         .collect()
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let hail_stones = read_input(input_file);
 
     let lower_bound = 200000000000000.0;
@@ -195,7 +195,7 @@ pub fn part1(input_file: &str) {
         valid_intersections / 2
     );
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let hail_stones = read_input(input_file);
     // Idea: determine the velocity components in all 3 directions
     // If there are two hailstones with the same x component of the velocity,

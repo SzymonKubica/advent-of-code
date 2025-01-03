@@ -1,6 +1,6 @@
 use std::fs;
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let histories = read_histories(input_file);
 
     let sum_extrapolated_values: i32 = histories.iter().map(|h| extrapolate_history(h)).sum();
@@ -26,7 +26,7 @@ fn extrapolate_history(history: &Vec<i32>) -> i32 {
     *appended_values.last().unwrap()
 }
 
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let histories = read_histories(input_file);
 
     let sum_extrapolated_values: i32 = histories

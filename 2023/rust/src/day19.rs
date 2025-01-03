@@ -362,7 +362,7 @@ fn read_workflows_and_parts(input_file: &str) -> (HashMap<String, Workflow>, Vec
     (workflows, parts)
 }
 
-pub fn part1(input_file: &str) {
+pub fn first_part(input_file: &str) {
     let (workflows, parts) = read_workflows_and_parts(input_file);
 
     for (name, workflow) in &workflows {
@@ -412,7 +412,7 @@ pub fn part1(input_file: &str) {
         total_rating_sum
     );
 }
-pub fn part2(input_file: &str) {
+pub fn second_part(input_file: &str) {
     let (workflows, parts) = read_workflows_and_parts(input_file);
 
     for (name, workflow) in &workflows {
