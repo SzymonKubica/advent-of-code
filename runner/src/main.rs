@@ -1,61 +1,100 @@
-use std::path::PathBuf;
+use core::panic;
+use std::{
+    env,
+    os::unix::process::CommandExt,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
-use clap::{arg, command, value_parser, ArgAction, Command};
+use clap::Parser;
 
-// TODO: set this up to invoke solution files generically
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// Selects the year of the AoC edition
+    #[arg(short, long, value_name = "number")]
+    year: u32,
+
+    /// Selects which day to run
+    #[arg(short, long, value_name = "number")]
+    day: u32,
+
+    /// Selects which part of the puzzle to execute
+    #[arg(short, long, value_name = "number")]
+    part: u32,
+
+    /// Language which needs to be used to run the solution
+    #[arg(short, long, value_name = "language name")]
+    language: String,
+
+    /// Specifies the location of the input file.
+    /// This is optional, defaults to <year>/input-files/day-<day>-puzzle-input
+    /// where day and year are specified using the args above.
+    #[arg(short, long, value_name = "file")]
+    input_file: Option<String>,
+    // TODO: think about a subcommand for benchmarking
+}
+
 fn main() {
-    let matches = command!() // requires `cargo` feature
-        .arg(arg!([name] "Optional name to operate on"))
-        .arg(
-            arg!(
-                -c --config <FILE> "Sets a custom config file"
-            )
-            // We don't have syntax yet for optional options, so manually calling `required`
-            .required(false)
-            .value_parser(value_parser!(PathBuf)),
-        )
-        .arg(arg!(
-            -d --debug ... "Turn debugging information on"
-        ))
-        .subcommand(
-            Command::new("test")
-                .about("does testing things")
-                .arg(arg!(-l --list "lists test values").action(ArgAction::SetTrue)),
-        )
-        .get_matches();
+    let cli = Cli::parse();
 
-    // You can check the value provided by positional arguments, or option arguments
-    if let Some(name) = matches.get_one::<String>("name") {
-        println!("Value for name: {name}");
+    log_cli_opitons(&cli);
+    let command_str = assemble_command(&cli);
+
+    let Some((command, args)) = command_str else {
+        panic!("Unable to assemble the run command for args: {:?}", cli);
+    };
+
+    println!("Assembled run command: {}", command);
+    let output = Command::new("sh")
+        .arg(command)
+        .arg(args[0].clone())
+        .arg(args[1].clone())
+        .arg(args[2].clone())
+        .output();
+    if let Ok(output) = output {
+        println!("{}", String::from_utf8(output.stdout).unwrap());
+    } else {
+        panic!(
+            "Script didn't execute successfully:\n {}",
+            output.err().unwrap()
+        );
     }
+}
 
-    if let Some(config_path) = matches.get_one::<PathBuf>("config") {
-        println!("Value for config: {}", config_path.display());
+fn log_cli_opitons(cli: &Cli) {
+    let part_name: &str = if cli.part == 1 { "first" } else { "second" };
+    println!(
+        "Executing AoC {} solution for day {}, {} part",
+        cli.year, cli.day, part_name
+    );
+    println!("Using language: {}", cli.language);
+
+    if let Some(input_file) = cli.input_file.as_deref() {
+        println!("Reading input from file {}", input_file);
     }
+}
 
-    // You can see how many times a particular flag or argument occurred
-    // Note, only flags can have multiple occurrences
-    match matches
-        .get_one::<u8>("debug")
-        .expect("Counts are defaulted")
-    {
-        0 => println!("Debug mode is off"),
-        1 => println!("Debug mode is kind of on"),
-        2 => println!("Debug mode is on"),
-        _ => println!("Don't be crazy"),
-    }
+fn assemble_command(cli: &Cli) -> Option<(String, Vec<String>)> {
+    let mut script_path = env::current_dir().unwrap();
+    script_path = script_path.join(PathBuf::from(&cli.year.to_string()));
+    script_path = script_path.join(PathBuf::from(&cli.language));
+    script_path = script_path.join("run.sh");
+    let Some(command) = script_path.to_str() else {
+        return None;
+    };
 
-    // You can check for the existence of subcommands, and if found use their
-    // matches just as you would the top level cmd
-    if let Some(matches) = matches.subcommand_matches("test") {
-        // "$ myapp test" was run
-        if matches.get_flag("list") {
-            // "$ myapp test -l" was run
-            println!("Printing testing lists...");
-        } else {
-            println!("Not printing testing lists...");
-        }
-    }
-
-    // Continued program logic goes here...
+    let input_file = if let Some(input_file) = cli.input_file.as_deref() {
+        input_file
+    } else {
+        &format!("{}/input-files/day-{}-puzzle-input", cli.year, cli.day)
+    };
+    Some((
+        command.to_string(),
+        vec![
+            cli.day.to_string(),
+            cli.part.to_string(),
+            input_file.to_string(),
+        ],
+    ))
 }

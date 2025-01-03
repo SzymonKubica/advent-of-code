@@ -3,5 +3,5 @@ part=$2
 input=$3
 output=$4
 
-cargo run $day $part $input
+cargo run --manifest-path /home/szymon/Projects/advent-of-code/2024/rust/Cargo.toml $day $part $input
 
