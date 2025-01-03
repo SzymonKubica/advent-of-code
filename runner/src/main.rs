@@ -37,7 +37,6 @@ struct Cli {
     /// where day and year are specified using the args above.
     #[arg(short, long, value_name = "file")]
     output_file: Option<String>,
-    // TODO: add a subcommand for benchmarking
 }
 
 fn main() {

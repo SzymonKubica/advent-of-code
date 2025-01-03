@@ -1,16 +1,24 @@
 from solution import Solution
 from typing import List, Tuple
 
+
 class Day1(Solution):
     def first_part(self, input_file: str):
         file = open(input_file, "r")
         input = file.read()
         left, right = parse_input_lists(input)
-        output = sum(map(lambda tup: abs(tup[0] - tup[1]), zip(sorted(left), sorted(right))))
-        print(output)
+        output = sum(
+            map(lambda tup: abs(tup[0] - tup[1]), zip(sorted(left), sorted(right)))
+        )
+        print("Difference", output)
+
     def second_part(self, input_file: str):
-        print("Day 1, second part")
-        pass
+        file = open(input_file, "r")
+        input = file.read()
+        left, right = parse_input_lists(input)
+
+        similarity_score = sum(map(lambda x: x * len(list(filter(lambda y: y == x, right))), left))
+        print("Similarity score: ", similarity_score)
 
 
 def parse_input_lists(input: str) -> Tuple[List[int], List[int]]:
