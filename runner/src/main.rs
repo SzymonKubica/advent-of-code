@@ -142,7 +142,12 @@ fn assemble_command_and_args(cli: &Cli) -> Option<Vec<String>> {
     let input_file = if let Some(input_file) = cli.input_file.as_deref() {
         input_file
     } else {
-        &format!("{}/input-files/day-{}-puzzle-input", cli.year, cli.day)
+        &format!(
+            "{}/{}/input-files/day-{}-puzzle-input",
+            env::current_dir().unwrap().to_str().unwrap(),
+            cli.year,
+            cli.day
+        )
     };
     Some(vec![
         command.to_string(),
