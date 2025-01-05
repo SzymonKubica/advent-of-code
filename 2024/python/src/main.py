@@ -8,14 +8,12 @@ def main():
     part = args[1]
     input_file = args[2]
 
-    print(f"day: {day}, part: {part}, input file: {input_file}")
-
-    solution_module = importlib.import_module(f"day{args[0]}")
-    solution_class = getattr(solution_module, f"Day{args[0]}")
+    solution_module = importlib.import_module(f"day{day}")
+    solution_class = getattr(solution_module, f"Day{day}")
 
     solution: Solution = solution_class()
 
-    if args[1] == "1":
+    if part == "1":
         solution.first_part(input_file)
     else:
         solution.second_part(input_file)
