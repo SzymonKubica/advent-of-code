@@ -8,7 +8,8 @@ def main():
     part = args[1]
     input_file = args[2]
 
-    print(f"day: {day}, part: {part}, input file: {input_file}")
+    #Disable logging to only measure raw perf
+    #print(f"day: {day}, part: {part}, input file: {input_file}")
 
     solution_module = importlib.import_module(f"day{args[0]}")
     solution_class = getattr(solution_module, f"Day{args[0]}")

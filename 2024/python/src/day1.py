@@ -10,7 +10,7 @@ class Day1(Solution):
         output = sum(
             map(lambda tup: abs(tup[0] - tup[1]), zip(sorted(left), sorted(right)))
         )
-        print("Difference", output)
+        print("Difference: ", output)
 
     def second_part(self, input_file: str):
         file = open(input_file, "r")
