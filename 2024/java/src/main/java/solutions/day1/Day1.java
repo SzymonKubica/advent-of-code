@@ -8,7 +8,9 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class Day1 implements Solution {
@@ -29,6 +31,14 @@ public class Day1 implements Solution {
 
     @Override
     public void secondPart(String inputFile) {
+        Pair<List<Integer>, List<Integer>> inputLists = parseInputLists(readInput(inputFile));
+        Map<Integer, Integer> counts = new HashMap<>();
+        for (int x : inputLists.getLeft()) {
+           counts.put(x, (int) inputLists.getRight().stream().filter(y -> y == x).count());
+        }
+        int similarityScore = counts.entrySet().stream().map(entry -> entry.getKey() * entry.getValue()).reduce(Integer::sum).get();
+
+        System.out.printf("Similarity score: %s\n", similarityScore);
     }
 
     private Pair<List<Integer>, List<Integer>> parseInputLists(Stream<String> input) {
