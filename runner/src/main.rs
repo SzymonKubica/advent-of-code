@@ -37,6 +37,10 @@ struct Cli {
     /// where day and year are specified using the args above.
     #[arg(short, long, value_name = "file")]
     output_file: Option<String>,
+
+    /// Rebuilds the target solution before running it.
+    #[arg(short, long, value_name = "boolean flag", default_value = "false")]
+    build: bool,
 }
 
 fn main() {
@@ -61,6 +65,16 @@ fn main() {
         .arg(command_and_args[1].clone())
         .arg(command_and_args[2].clone())
         .arg(command_and_args[3].clone());
+
+    if cli.build {
+        let mut shell = Command::new("sh");
+        let build_command = shell
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .arg(enrich_script_name_with_path(&cli, "build.sh"))
+            .arg(cli.language.clone());
+        execute_command_stream_and_capture_output(build_command, None);
+    }
 
     execute_command_stream_and_capture_output(command, cli.output_file);
 }
@@ -132,10 +146,7 @@ fn log_cli_opitons(cli: &Cli) {
 }
 
 fn assemble_command_and_args(cli: &Cli) -> Option<Vec<String>> {
-    let mut script_path = env::current_dir().unwrap();
-    script_path = script_path.join(PathBuf::from(&cli.year.to_string()));
-    script_path = script_path.join(PathBuf::from(&cli.language));
-    script_path = script_path.join("run.sh");
+    let script_path = enrich_script_name_with_path(cli, "run.sh");
     let command = script_path.to_str()?;
 
     let input_file = if let Some(input_file) = cli.input_file.as_deref() {
@@ -154,4 +165,14 @@ fn assemble_command_and_args(cli: &Cli) -> Option<Vec<String>> {
         cli.part.to_string(),
         input_file.to_string(),
     ])
+}
+
+/// Appends the correct directory to the script name based on the aoc year and
+/// selected language.
+fn enrich_script_name_with_path(cli: &Cli, script: &str) -> PathBuf {
+    let mut script_path = env::current_dir().unwrap();
+    script_path = script_path.join(PathBuf::from(&cli.year.to_string()));
+    script_path = script_path.join(PathBuf::from(&cli.language));
+    script_path = script_path.join(script);
+    script_path
 }
