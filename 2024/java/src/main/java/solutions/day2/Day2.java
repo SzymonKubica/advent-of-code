@@ -26,7 +26,9 @@ public class Day2 implements Solution {
         List<Report> reports = parseReports(readInput(inputFile));
         List<List<Report>> allPossibilities = generateAllPossibilitiesWithProblemDampener(reports);
         long result = allPossibilities.stream()
-                .filter(rs -> rs.stream().anyMatch (r -> (r.isAllIncreasing() || r.isAllDecreasing()) && r.satisfiesAdjacentDifferenceBounds()))
+                .filter(rs -> rs.stream()
+                        .anyMatch(
+                                r -> (r.isAllIncreasing() || r.isAllDecreasing()) && r.satisfiesAdjacentDifferenceBounds()))
                 .count();
         System.out.printf("There are %d safe reports.%n", result);
     }
@@ -55,7 +57,7 @@ public class Day2 implements Solution {
     record Report(List<Level> levels) {
         public boolean isAllIncreasing() {
             for (int i = 0; i < levels.size() - 1; i++) {
-                if (levels.get(i+1).value <= levels.get(i).value) {
+                if (levels.get(i + 1).value <= levels.get(i).value) {
                     return false;
                 }
             }
@@ -64,7 +66,7 @@ public class Day2 implements Solution {
 
         public boolean isAllDecreasing() {
             for (int i = 0; i < levels.size() - 1; i++) {
-                if (levels.get(i+1).value >= levels.get(i).value) {
+                if (levels.get(i + 1).value >= levels.get(i).value) {
                     return false;
                 }
             }
@@ -73,7 +75,7 @@ public class Day2 implements Solution {
 
         public boolean satisfiesAdjacentDifferenceBounds() {
             for (int i = 0; i < levels.size() - 1; i++) {
-                int diff = Math.abs(levels.get(i+1).value - levels.get(i).value);
+                int diff = Math.abs(levels.get(i + 1).value - levels.get(i).value);
                 if (diff < 1 || 3 < diff) {
                     return false;
                 }
