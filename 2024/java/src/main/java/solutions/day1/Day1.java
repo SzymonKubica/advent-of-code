@@ -34,12 +34,17 @@ public class Day1 implements Solution {
         Pair<List<Integer>, List<Integer>> inputLists = parseInputLists(readInput(inputFile));
         Map<Integer, Integer> counts = new HashMap<>();
         for (int x : inputLists.getLeft()) {
-           counts.put(x, (int) inputLists.getRight().stream().filter(y -> y == x).count());
+            counts.put(x, (int) inputLists.getRight().stream().filter(y -> y == x).count());
         }
-        int similarityScore = counts.entrySet().stream().map(entry -> entry.getKey() * entry.getValue()).reduce(Integer::sum).get();
+        int similarityScore = counts.entrySet()
+                .stream()
+                .map(entry -> entry.getKey() * entry.getValue())
+                .reduce(Integer::sum)
+                .get();
 
         System.out.printf("Similarity score: %s\n", similarityScore);
     }
+
 
     private Pair<List<Integer>, List<Integer>> parseInputLists(Stream<String> input) {
         List<Integer> left = new ArrayList<>();
