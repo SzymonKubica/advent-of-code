@@ -1,11 +1,9 @@
 package solutions.day2;
 
 import solutions.Solution;
+import solutions.Utils;
 
 import javax.annotation.Nonnull;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +12,7 @@ import java.util.stream.Stream;
 public class Day2 implements Solution {
     @Override
     public void firstPart(String inputFile) {
-        List<Report> reports = parseReports(readInput(inputFile));
+        List<Report> reports = parseReports(Utils.readInputAsStream(inputFile));
         long result = reports.stream()
                 .filter(r -> (r.isAllIncreasing() || r.isAllDecreasing()) && r.satisfiesAdjacentDifferenceBounds())
                 .count();
@@ -23,7 +21,7 @@ public class Day2 implements Solution {
 
     @Override
     public void secondPart(String inputFile) {
-        List<Report> reports = parseReports(readInput(inputFile));
+        List<Report> reports = parseReports(Utils.readInputAsStream(inputFile));
         List<List<Report>> allPossibilities = generateAllPossibilitiesWithProblemDampener(reports);
         long result = allPossibilities.stream()
                 .filter(rs -> rs.stream()
@@ -85,17 +83,5 @@ public class Day2 implements Solution {
     }
 
     record Level(int value) {
-    }
-
-    /**
-     * TODO: create a shared utils library and put this thing there.
-     */
-    private Stream<String> readInput(String inputFile) {
-        try {
-            var reader = new BufferedReader(new FileReader(inputFile));
-            return reader.lines();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

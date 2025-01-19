@@ -2,6 +2,7 @@ package solutions;
 
 import solutions.day1.Day1;
 import solutions.day2.Day2;
+import solutions.day3.Day3;
 
 public class SolutionRunner {
     public static void main(String[] args) {
@@ -18,6 +19,9 @@ public class SolutionRunner {
                 break;
             case 2:
                 solution = new Day2();
+                break;
+            case 3:
+                solution = new Day3();
                 break;
             default: throw new RuntimeException("Day %d not implemented".formatted(day));
         }

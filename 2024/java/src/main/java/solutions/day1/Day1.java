@@ -3,10 +3,8 @@ package solutions.day1;
 import com.google.common.collect.Streams;
 import org.apache.commons.lang3.tuple.Pair;
 import solutions.Solution;
+import solutions.Utils;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +14,8 @@ import java.util.stream.Stream;
 public class Day1 implements Solution {
     @Override
     public void firstPart(String inputFile) {
-        Pair<List<Integer>, List<Integer>> inputLists = parseInputLists(readInput(inputFile));
+        Pair<List<Integer>, List<Integer>> inputLists = parseInputLists(
+                Utils.readInputAsStream(inputFile));
         var sortedInputLists = Pair.of(inputLists.getLeft().stream().sorted().toList(),
                 inputLists.getRight().stream().sorted().toList());
 
@@ -31,7 +30,8 @@ public class Day1 implements Solution {
 
     @Override
     public void secondPart(String inputFile) {
-        Pair<List<Integer>, List<Integer>> inputLists = parseInputLists(readInput(inputFile));
+        Pair<List<Integer>, List<Integer>> inputLists = parseInputLists(
+                Utils.readInputAsStream(inputFile));
         Map<Integer, Integer> counts = new HashMap<>();
         for (int x : inputLists.getLeft()) {
             counts.put(x, (int) inputLists.getRight().stream().filter(y -> y == x).count());
@@ -60,12 +60,4 @@ public class Day1 implements Solution {
         return Pair.of(left, right);
     }
 
-    private Stream<String> readInput(String inputFile) {
-        try {
-            var reader = new BufferedReader(new FileReader(inputFile));
-            return reader.lines();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
