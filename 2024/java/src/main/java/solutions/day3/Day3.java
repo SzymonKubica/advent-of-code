@@ -16,10 +16,9 @@ public class Day3 implements Solution {
     public void firstPart(String inputFile) {
 
         List<String> inputLines = Utils.readInputAsStream(inputFile).toList();
-
         assert (inputLines.size() == 1) : "Program memory input for this puzzle should be a " +
                                           "single long line.";
-        String programMemory = inputLines.get(0);
+        String programMemory = String.join("", inputLines);
         System.out.println(programMemory);
 
         List<Character> programMemoryChars = new ArrayList<>();
