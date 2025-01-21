@@ -1,5 +1,6 @@
 package solutions.day3;
 
+import lombok.extern.java.Log;
 import org.checkerframework.checker.units.qual.C;
 import solutions.Solution;
 import solutions.Utils;
@@ -11,29 +12,110 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Log
 public class Day3 implements Solution {
     @Override
     public void firstPart(String inputFile) {
 
         List<String> inputLines = Utils.readInputAsStream(inputFile).toList();
-        assert (inputLines.size() == 1) : "Program memory input for this puzzle should be a " +
-                                          "single long line.";
-        String programMemory = String.join("", inputLines);
-        System.out.println(programMemory);
-
-        List<Character> programMemoryChars = new ArrayList<>();
-        for (byte c : programMemory.getBytes(StandardCharsets.UTF_8)) {
-            programMemoryChars.add((char) c);
-        }
-
-        final var state = new ParsingState(programMemoryChars, 0);
+        final var state = initializeParsingState(inputLines);
 
         // this design is bad.
-        List<Token> tokensToParse = List.of(new Mul(), new RightParen(), new LeftParen(),
-                new Comma(), new ShortNumber(0), new Bad());
+        List<Token> tokensAvailable = List.of(new Mul(),
+                                            new RightParen(),
+                                            new LeftParen(),
+                                            new Comma(),
+                                            new ShortNumber(0),
+                                            new Bad());
 
+        List<Token> parsedTokens = parseTokens(state, tokensAvailable);
+
+        int mulPatternLength = 6;
+        int output = 0;
+        for (int i = 0; i < parsedTokens.size() + 1 - mulPatternLength; ) {
+            if (multiplicationFound(parsedTokens, i)) {
+                int firstArgument = ((ShortNumber) parsedTokens.get(i + 2)).value;
+                int secondArgument = ((ShortNumber) parsedTokens.get(i + 4)).value;
+                output += firstArgument * secondArgument;
+                //log.info("mul(%d,%d)\n".formatted(firstArgument, secondArgument));
+                i += mulPatternLength;
+                continue;
+            }
+            i += 1;
+        }
+        log.info("Output: %d".formatted(output));
+    }
+
+    @Override
+    public void secondPart(String inputFile) {
+
+        List<String> inputLines = Utils.readInputAsStream(inputFile).toList();
+        final var state = initializeParsingState(inputLines);
+
+        // this design is bad.
+        List<Token> tokensAvailable = List.of(new Mul(),
+                                              new RightParen(),
+                                              new LeftParen(),
+                                              new Comma(),
+                                              new ShortNumber(0),
+                                              new DoNot(),
+                                              new Do(),
+                                              new Bad());
+
+        List<Token> parsedTokens = parseTokens(state, tokensAvailable);
+
+        int mulPatternLength = 6;
+        int doDoNotPatternLength = 3;
+        int output = 0;
+        boolean areMultiplicationsEnabled = true;
+        for (int i = 0; i < parsedTokens.size() + 1 - mulPatternLength; ) {
+            if (multiplicationFound(parsedTokens, i)) {
+                int firstArgument = ((ShortNumber) parsedTokens.get(i + 2)).value;
+                int secondArgument = ((ShortNumber) parsedTokens.get(i + 4)).value;
+                if (areMultiplicationsEnabled) {
+                    output += firstArgument * secondArgument;
+                    //log.info("mul(%d,%d)\n".formatted(firstArgument, secondArgument));
+                }
+                i += mulPatternLength;
+                continue;
+            } else if (doFound(parsedTokens, i)) {
+                areMultiplicationsEnabled = true;
+                i += doDoNotPatternLength;
+                continue;
+            } else if (doNotFound(parsedTokens, i)) {
+                areMultiplicationsEnabled = false;
+                i += doDoNotPatternLength;
+                continue;
+            }
+            i += 1;
+        }
+        log.info("Output: %d".formatted(output));
+    }
+
+
+    private static boolean multiplicationFound(List<Token> parsedTokens, int index) {
+        return parsedTokens.get(index) instanceof Mul
+        && parsedTokens.get(index + 1) instanceof LeftParen
+        && parsedTokens.get(index + 2) instanceof ShortNumber
+        && parsedTokens.get(index + 3) instanceof Comma
+        && parsedTokens.get(index + 4) instanceof ShortNumber
+        && parsedTokens.get(index + 5) instanceof RightParen;
+    }
+
+    private boolean doNotFound(List<Token> parsedTokens, int index) {
+        return parsedTokens.get(index) instanceof DoNot
+               && parsedTokens.get(index + 1) instanceof LeftParen
+               && parsedTokens.get(index + 2) instanceof RightParen;
+    }
+
+    private boolean doFound(List<Token> parsedTokens, int index) {
+        return parsedTokens.get(index) instanceof Do
+               && parsedTokens.get(index + 1) instanceof LeftParen
+               && parsedTokens.get(index + 2) instanceof RightParen;
+    }
+
+    private static List<Token> parseTokens(ParsingState state, List<Token> tokensToParse) {
         List<Token> parsedTokens = new ArrayList<>();
-
         while (!state.noMoreToParse()) {
             for (Token tokenType : tokensToParse) {
                 final var maybeToken = tokenType.tryToParse(state);
@@ -43,38 +125,28 @@ public class Day3 implements Solution {
                 }
             }
         }
-
         String programMemoryAfterParsing = parsedTokens.stream()
                 .map(Objects::toString)
                 .collect(Collectors.joining(""));
+        log.info("Program memory after parsing: \n%s\n".formatted(programMemoryAfterParsing));
+        return parsedTokens;
+    }
 
-        System.out.printf("Program memory after parsing: \n%s\n", programMemoryAfterParsing);
 
-        int mulPatternLength = 6;
-        long output = 0;
-        for (int i = 0; i < parsedTokens.size() + 1 - mulPatternLength; ) {
-            if (parsedTokens.get(i) instanceof Mul && parsedTokens.get(
-                    i + 1) instanceof LeftParen && parsedTokens.get(
-                    i + 2) instanceof ShortNumber s1 && parsedTokens.get(
-                    i + 3) instanceof Comma && parsedTokens.get(
-                    i + 4) instanceof ShortNumber s2 && parsedTokens.get(
-                    i + 5) instanceof RightParen) {
-                output += (((long) s1.value) * ((long) s2.value));
-                System.out.printf("mul(%d,%d)\n", s1.value, s2.value);
-                i += 6;
-                continue;
-            }
-            i += 1;
+    private static ParsingState initializeParsingState(List<String> inputLines) {
+        assert (inputLines.size() == 1) :
+                "Program memory input for this puzzle should be a " + "single long line.";
+        String programMemory = String.join("", inputLines);
+        log.info("Read program memory: \n" + programMemory);
+
+        List<Character> programMemoryChars = new ArrayList<>();
+        for (byte c : programMemory.getBytes(StandardCharsets.UTF_8)) {
+            programMemoryChars.add((char) c);
         }
-        System.out.printf("Output: %d", output);
 
-
+        return new ParsingState(programMemoryChars, 0);
     }
 
-    @Override
-    public void secondPart(String inputFile) {
-
-    }
 
     /**
      * Record maintaining information about the current state of parsing the
@@ -111,13 +183,13 @@ public class Day3 implements Solution {
 
         public char peekNext() {
             assert (index <= programMemory.size()) :
-                    "The index needs to be within the program " + "memory";
+                    "The index needs to be within the program memory";
             return programMemory.get(index);
         }
 
         public char popShift() {
             assert (index <= programMemory.size()) :
-                    "The index needs to be within the program " + "memory";
+                    "The index needs to be within the program memory";
             return programMemory.get(index++);
         }
 
@@ -126,11 +198,12 @@ public class Day3 implements Solution {
         }
     }
 
-    private sealed interface Token permits Mul, LeftParen, RightParen, Comma, ShortNumber, Bad {
+    private sealed interface Token
+            permits Mul, LeftParen, RightParen, Comma, ShortNumber, Bad, Do, DoNot {
         Optional<Token> tryToParse(ParsingState state);
     }
 
-    private final static class Mul implements Token {
+    private static final class Mul implements Token {
         @Override
         public Optional<Token> tryToParse(ParsingState state) {
             if (state.charsLeft() >= 3 && state.getPrefix(3).equals("mul")) {
@@ -148,7 +221,7 @@ public class Day3 implements Solution {
     }
 
 
-    private final static class LeftParen implements Token {
+    private static final class LeftParen implements Token {
         @Override
         public Optional<Token> tryToParse(ParsingState state) {
             if (state.getPrefix(1).equals("(")) {
@@ -164,7 +237,7 @@ public class Day3 implements Solution {
         }
     }
 
-    private final static class RightParen implements Token {
+    private static final class RightParen implements Token {
         @Override
         public Optional<Token> tryToParse(ParsingState state) {
             if (state.getPrefix(1).equals(")")) {
@@ -180,7 +253,7 @@ public class Day3 implements Solution {
         }
     }
 
-    private final static class Comma implements Token {
+    private static final class Comma implements Token {
         @Override
         public Optional<Token> tryToParse(ParsingState state) {
             if (state.getPrefix(1).equals(",")) {
@@ -196,7 +269,7 @@ public class Day3 implements Solution {
         }
     }
 
-    private final static class Bad implements Token {
+    private static final class Bad implements Token {
         @Override
         public Optional<Token> tryToParse(ParsingState state) {
             if (state.noMoreToParse()) {
@@ -212,7 +285,7 @@ public class Day3 implements Solution {
         }
     }
 
-    private final static class ShortNumber implements Token {
+    private static final class ShortNumber implements Token {
         final int value;
 
         private ShortNumber(int value) {
@@ -234,13 +307,49 @@ public class Day3 implements Solution {
                 return Optional.empty();
             }
 
-            return Optional.of(new ShortNumber(Integer.parseInt(
-                    numberDigits.stream().map(String::valueOf).collect(Collectors.joining("")))));
+            return Optional.of(new ShortNumber(Integer.parseInt(numberDigits.stream()
+                                                                        .map(String::valueOf)
+                                                                        .collect(Collectors.joining(
+                                                                                "")))));
         }
 
         @Override
         public String toString() {
             return String.valueOf(value);
+        }
+    }
+
+    private static final class Do implements Token {
+        @Override
+        public Optional<Token> tryToParse(ParsingState state) {
+            if (state.charsLeft() >= 2 && state.getPrefix(2).equals("do")) {
+                state.index += 2;
+                return Optional.of(new Do());
+            }
+
+            return Optional.empty();
+        }
+
+        @Override
+        public String toString() {
+            return "do";
+        }
+    }
+
+    private static final class DoNot implements Token {
+        @Override
+        public Optional<Token> tryToParse(ParsingState state) {
+            if (state.charsLeft() >= 5 && state.getPrefix(5).equals("don't")) {
+                state.index += 5;
+                return Optional.of(new DoNot());
+            }
+
+            return Optional.empty();
+        }
+
+        @Override
+        public String toString() {
+            return "don't";
         }
     }
 }
