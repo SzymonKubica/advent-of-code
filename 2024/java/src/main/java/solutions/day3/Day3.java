@@ -37,7 +37,6 @@ public class Day3 implements Solution {
                 int firstArgument = ((ShortNumber) parsedTokens.get(i + 2)).value;
                 int secondArgument = ((ShortNumber) parsedTokens.get(i + 4)).value;
                 output += firstArgument * secondArgument;
-                //log.info("mul(%d,%d)\n".formatted(firstArgument, secondArgument));
                 i += mulPatternLength;
                 continue;
             }
@@ -74,7 +73,6 @@ public class Day3 implements Solution {
                 int secondArgument = ((ShortNumber) parsedTokens.get(i + 4)).value;
                 if (areMultiplicationsEnabled) {
                     output += firstArgument * secondArgument;
-                    //log.info("mul(%d,%d)\n".formatted(firstArgument, secondArgument));
                 }
                 i += mulPatternLength;
                 continue;
