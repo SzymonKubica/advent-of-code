@@ -63,7 +63,9 @@ public class Day5 implements Solution {
 
         System.out.printf("Invalid updates:\n%s\n", Utils.toStringLineByLine(updates));
 
-        final var reorderedInvalidUpdates = invalidUpdates.stream().map(update -> update.reorderAccordingTo(rules)).toList();
+        final var reorderedInvalidUpdates = invalidUpdates.stream()
+                .map(update -> update.reorderAccordingTo(rules))
+                .toList();
 
         final int middlePageNumberSum = reorderedInvalidUpdates.stream()
                 .map(Update::getMiddlePageNumber)
@@ -134,7 +136,8 @@ public class Day5 implements Solution {
                 final int i_idx = i;
                 if (pages.subList(i + 1, pages.size())
                         .stream()
-                        .anyMatch(value -> happensBeforeMap.getOrDefault(pages.get(i_idx), List.of())
+                        .anyMatch(value -> happensBeforeMap.getOrDefault(pages.get(i_idx),
+                                                                         List.of())
                                 .contains(value))) {
                     return false;
                 }
@@ -147,13 +150,17 @@ public class Day5 implements Solution {
         }
 
         public Update reorderAccordingTo(List<OrderingRule> rules) {
-            List<PageUpdate> pageUpdates = new ArrayList<>(pages.stream().map(p -> new PageUpdate(p, rules)).toList());
+            List<PageUpdate> pageUpdates = new ArrayList<>(pages.stream()
+                                                                   .map(p -> new PageUpdate(p,
+                                                                                            rules))
+                                                                   .toList());
             pageUpdates.sort(PageUpdate::compareTo);
             return new Update(pageUpdates.stream().map(PageUpdate::pageNumber).toList());
         }
 
         /* Records required to do the reordering for the second part */
-        private record PageUpdate(int pageNumber, List<OrderingRule> rules) implements Comparable<PageUpdate>{
+        private record PageUpdate(int pageNumber, List<OrderingRule> rules)
+                implements Comparable<PageUpdate> {
             @Override
             public int compareTo(PageUpdate that) {
                 OrderingRule thisBeforeThat = new OrderingRule(pageNumber, that.pageNumber);
