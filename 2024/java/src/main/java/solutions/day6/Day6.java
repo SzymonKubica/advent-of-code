@@ -174,39 +174,6 @@ public class Day6 implements Solution {
             return Optional.of(location);
         }
 
-        /**
-         * For part two we need to keep track of the direction in which the guard was going
-         * when he hit the obstacles. This is needed to correctly find the infinite loops.
-         * We do this by maintaining a map from the position of the guard where he was
-         * located before hitting an obstacle to the direction in which he was going.
-         */
-        public Optional<CommonStructures.Point> takeStepOnGridRecordingObstacleImpactDirections(
-                List<List<GridCell>> grid,
-                Map<CommonStructures.Point, CommonStructures.Direction> obstacleImpactDirections) {
-            CommonStructures.Point nextLocation = location.translateInDirection(direction);
-            if (!nextLocation.isInsideGrid(grid)) {
-                return Optional.empty();
-            }
-            while (nextLocation.indexGrid(grid) == GridCell.OBSTACLE) {
-                obstacleImpactDirections.put(location, direction);
-                turnRight();
-                nextLocation = location.translateInDirection(direction);
-                if (!nextLocation.isInsideGrid(grid)) {
-                    return Optional.empty();
-                }
-            }
-            location = nextLocation;
-            return Optional.of(location);
-        }
-
-        public Optional<GridCell> peekNextLocation(List<List<GridCell>> grid) {
-            CommonStructures.Point nextLocation = location.translateInDirection(direction);
-            if (!nextLocation.isInsideGrid(grid)) {
-                return Optional.empty();
-            }
-            return Optional.of(location.indexGrid(grid));
-        }
-
         private void turnRight() {
             direction = switch (direction) {
                 case UP -> CommonStructures.Direction.RIGHT;
