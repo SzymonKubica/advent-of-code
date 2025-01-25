@@ -27,11 +27,15 @@ public class CommonStructures {
 
         public <T> boolean isInsideGrid(List<List<T>> grid) {
             return !grid.isEmpty()
-                   && grid.stream().noneMatch(List::isEmpty)
                    && 0 <= x
                    && x < grid.get(0).size()
                    && 0 <= y
                    && y < grid.size();
+        }
+
+        public <T> T indexGrid(List<List<T>> grid) {
+            assert isInsideGrid(grid) : "We can only index into the grid when the location is inside of it.";
+            return grid.get(y).get(x);
         }
 
         /**
@@ -46,13 +50,29 @@ public class CommonStructures {
                            this.translateBy(WEST_UNIT_VECTOR));
         }
 
+        public Point translateInDirection(Direction direction) {
+            return switch (direction) {
+                case UP -> this.translateBy(NORTH_UNIT_VECTOR);
+                case DOWN -> this.translateBy(SOUTH_UNIT_VECTOR);
+                case LEFT -> this.translateBy(WEST_UNIT_VECTOR);
+                case RIGHT -> this.translateBy(EAST_UNIT_VECTOR);
+            };
+        }
+
         public <T> List<Point> getNeighboursInsideGrid(List<List<T>> grid) {
             return getNeighbours().stream().filter(n -> n.isInsideGrid(grid)).toList();
         }
 
-        private static final Point NORTH_UNIT_VECTOR = new Point(0, 1);
+        private static final Point NORTH_UNIT_VECTOR = new Point(0, -1);
         private static final Point EAST_UNIT_VECTOR = new Point(1, 0);
-        private static final Point SOUTH_UNIT_VECTOR = new Point(0, -1);
-        private static final Point WEST_UNIT_VECTOR = new Point(0, 1);
+        private static final Point SOUTH_UNIT_VECTOR = new Point(0, 1);
+        private static final Point WEST_UNIT_VECTOR = new Point(-1, 0);
+    }
+
+    public enum Direction {
+        UP,
+        DOWN,
+        LEFT,
+        RIGHT,
     }
 }
