@@ -34,7 +34,7 @@ public class Day6 implements Solution {
     }
 
     private enum GridCell {
-        EMPTY, GUARD, OBSTACLE;
+        EMPTY, GUARD, OBSTACLE, VISITED;
 
         public static GridCell fromChar(char c) {
             return switch (c) {
@@ -55,6 +55,7 @@ public class Day6 implements Solution {
                 case EMPTY -> ".";
                 case GUARD -> "^";
                 case OBSTACLE -> "#";
+                case VISITED -> "X";
             };
         }
     }
