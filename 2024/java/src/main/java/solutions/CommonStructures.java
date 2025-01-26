@@ -25,6 +25,14 @@ public class CommonStructures {
             return new Point(x + translationVector.x, y + translationVector.y);
         }
 
+        public Point difference(Point translationVector) {
+            return new Point(x - translationVector.x, y - translationVector.y);
+        }
+
+        public Point reflectAboutOrigin() {
+            return new Point(-x, -y);
+        }
+
         public <T> boolean isInsideGrid(List<List<T>> grid) {
             return !grid.isEmpty()
                    && 0 <= x

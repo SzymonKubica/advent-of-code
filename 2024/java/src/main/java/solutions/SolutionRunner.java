@@ -7,6 +7,9 @@ import solutions.day4.Day4;
 import solutions.day5.Day5;
 import solutions.day6.Day6;
 import solutions.day7.Day7;
+import solutions.day8.Day8;
+
+import java.util.List;
 
 public class SolutionRunner {
     public static void main(String[] args) {
@@ -16,31 +19,23 @@ public class SolutionRunner {
         int part = Integer.parseInt(args[1]);
         String inputFile = args[2];
 
-        Solution solution;
-        switch (day) {
-            case 1:
-                solution = new Day1();
-                break;
-            case 2:
-                solution = new Day2();
-                break;
-            case 3:
-                solution = new Day3();
-                break;
-            case 4:
-                solution = new Day4();
-                break;
-            case 5:
-                solution = new Day5();
-                break;
-            case 6:
-                solution = new Day6();
-                break;
-            case 7:
-                solution = new Day7();
-                break;
-            default: throw new RuntimeException("Day %d not implemented".formatted(day));
+        List<Solution> solutions = List.of(
+                new Day1(),
+                new Day2(),
+                new Day3(),
+                new Day4(),
+                new Day5(),
+                new Day6(),
+                new Day7(),
+                new Day8()
+        );
+
+        int day_idx = day - 1;
+        if (day_idx > solutions.size()) {
+            throw new RuntimeException("Day %d not implemented".formatted(day));
         }
+
+        Solution solution = solutions.get(day_idx);
 
         if (part == 1) {
             solution.firstPart(inputFile);
