@@ -8,27 +8,28 @@ import solutions.day5.Day5;
 import solutions.day6.Day6;
 import solutions.day7.Day7;
 import solutions.day8.Day8;
+import solutions.day9.Day9;
 
 import java.util.List;
 
 public class SolutionRunner {
     public static void main(String[] args) {
-        assert (args.length == 3): "You need to specify the day, puzzle part and a path to the input file";
+        assert (args.length == 3) :
+                "You need to specify the day, puzzle part and a path to the input file";
 
         int day = Integer.parseInt(args[0]);
         int part = Integer.parseInt(args[1]);
         String inputFile = args[2];
 
-        List<Solution> solutions = List.of(
-                new Day1(),
-                new Day2(),
-                new Day3(),
-                new Day4(),
-                new Day5(),
-                new Day6(),
-                new Day7(),
-                new Day8()
-        );
+        List<Solution> solutions = List.of(new Day1(),
+                                           new Day2(),
+                                           new Day3(),
+                                           new Day4(),
+                                           new Day5(),
+                                           new Day6(),
+                                           new Day7(),
+                                           new Day8(),
+                                           new Day9());
 
         int day_idx = day - 1;
         if (day_idx > solutions.size()) {
