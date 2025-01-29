@@ -4,10 +4,7 @@ import org.checkerframework.checker.units.qual.A;
 import solutions.Solution;
 import solutions.Utils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -22,6 +19,17 @@ public class Day9 implements Solution {
         System.out.printf("Disk checksum: %d", checksum);
 
     }
+
+    @Override
+    public void secondPart(String inputFile) {
+        final var diskLayout = readDiskLayout(Utils.readInputAsStream(inputFile).toList().get(0));
+        System.out.println(printDiskLayout(diskLayout));
+        final var compactedDisk = performCompactionChunked(diskLayout);
+        System.out.println(printDiskLayout(compactedDisk));
+        long checksum = calculateChecksum(compactedDisk);
+        System.out.printf("Disk checksum: %d", checksum);
+    }
+
 
     private long calculateChecksum(List<Optional<DiskBlock>> compactedDisk) {
         long checksum = 0;
@@ -57,10 +65,77 @@ public class Day9 implements Solution {
         return compactedDiskLayout;
     }
 
-    @Override
-    public void secondPart(String inputFile) {
+    private List<Optional<DiskBlock>> performCompactionChunked(List<Optional<DiskBlock>> diskLayout) {
+        List<Optional<File>> diskLayoutFilesInChunks = assembleFiles(diskLayout);
+        System.out.println(printChunkedFiles(diskLayoutFilesInChunks));
 
+        List<Optional<DiskBlock>> output = new ArrayList<>(diskLayout);
+
+        Map<Integer, Integer> candidatesOriginalPositions = new HashMap<>();
+
+
+        List<File> candidatesToMove = new ArrayList<>(diskLayoutFilesInChunks.stream().filter(Optional::isPresent).map(Optional::get).toList());
+        for (File candidate: candidatesToMove) {
+            for (int i = 0; i < output.size(); i++) {
+                if (output.get(i).isPresent() && output.get(i).get().id == candidate.id) {
+                    candidatesOriginalPositions.put(candidate.id, i);
+                }
+            }
+        }
+        Collections.reverse(candidatesToMove);
+        for (File candidate: candidatesToMove) {
+            for (int i = 0; i < candidatesOriginalPositions.get(candidate.id); i++) {
+                if (i+candidate.length <= output.size() && output.subList(i, i+candidate.length).stream().allMatch(Optional::isEmpty)) {
+                    for(int j = i; j < output.size(); j++){
+                        if (j < i+candidate.length) {
+                            output.set(j, Optional.of(new DiskBlock(candidate.id)));
+                        } else if (output.get(j).isPresent() && output.get(j).get().id == candidate.id) {
+                            // Clean up the old location of the block.
+                            output.set(j, Optional.empty());
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        return output;
     }
+
+    private String printChunkedFiles(List<Optional<File>> files) {
+        return files.stream().map(maybeFile -> maybeFile.isPresent() ? String.valueOf(maybeFile.get().id).repeat(maybeFile.get().length) : ".").collect(
+                Collectors.joining(""));
+    }
+
+    private List<Optional<File>> assembleFiles(List<Optional<DiskBlock>> diskLayout) {
+        List<Optional<File>> output = new ArrayList<>();
+
+        Optional<DiskBlock> lastBlock = Optional.empty();
+        int streak = 0;
+        for (final var maybeFileBlock : diskLayout) {
+            if (maybeFileBlock.isEmpty()) {
+                if (lastBlock.isPresent()) {
+                    output.add(Optional.of(new File(lastBlock.get().id, streak)));
+                }
+                output.add(Optional.empty());
+                lastBlock = maybeFileBlock;
+                streak = 0;
+            } else {
+                if (lastBlock.isEmpty() || lastBlock.get().id == maybeFileBlock.get().id) {
+                    streak++;
+                    lastBlock = maybeFileBlock;
+                } else if (lastBlock.get().id != maybeFileBlock.get().id) {
+                    output.add(Optional.of(new File(lastBlock.get().id, streak)));
+                    streak = 1;
+                    lastBlock = maybeFileBlock;
+                }
+            }
+        }
+        if (streak > 0 && lastBlock.isPresent()) {
+            output.add(Optional.of(new File(lastBlock.get().id, streak)));
+        }
+        return output;
+    }
+
 
     private static List<Optional<DiskBlock>> readDiskLayout(String input) {
         List<Character> chars = input.chars().mapToObj(c -> (char) c).toList();
@@ -86,6 +161,8 @@ public class Day9 implements Solution {
                 .collect(Collectors.joining(""));
 
     }
+
+    record File(int id, int length) {}
 
     record DiskBlock(int id) {
 
