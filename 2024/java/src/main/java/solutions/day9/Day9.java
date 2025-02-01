@@ -74,8 +74,11 @@ public class Day9 implements Solution {
         Map<Integer, Integer> candidatesOriginalPositions = new HashMap<>();
 
 
-        List<File> candidatesToMove = new ArrayList<>(diskLayoutFilesInChunks.stream().filter(Optional::isPresent).map(Optional::get).toList());
-        for (File candidate: candidatesToMove) {
+        List<File> candidatesToMove = new ArrayList<>(diskLayoutFilesInChunks.stream()
+                                                              .filter(Optional::isPresent)
+                                                              .map(Optional::get)
+                                                              .toList());
+        for (File candidate : candidatesToMove) {
             for (int i = 0; i < output.size(); i++) {
                 if (output.get(i).isPresent() && output.get(i).get().id == candidate.id) {
                     candidatesOriginalPositions.put(candidate.id, i);
@@ -83,13 +86,16 @@ public class Day9 implements Solution {
             }
         }
         Collections.reverse(candidatesToMove);
-        for (File candidate: candidatesToMove) {
+        for (File candidate : candidatesToMove) {
             for (int i = 0; i < candidatesOriginalPositions.get(candidate.id); i++) {
-                if (i+candidate.length <= output.size() && output.subList(i, i+candidate.length).stream().allMatch(Optional::isEmpty)) {
-                    for(int j = i; j < output.size(); j++){
-                        if (j < i+candidate.length) {
+                if (i + candidate.length <= output.size() && output.subList(i, i + candidate.length)
+                        .stream()
+                        .allMatch(Optional::isEmpty)) {
+                    for (int j = i; j < output.size(); j++) {
+                        if (j < i + candidate.length) {
                             output.set(j, Optional.of(new DiskBlock(candidate.id)));
-                        } else if (output.get(j).isPresent() && output.get(j).get().id == candidate.id) {
+                        } else if (output.get(j).isPresent()
+                                   && output.get(j).get().id == candidate.id) {
                             // Clean up the old location of the block.
                             output.set(j, Optional.empty());
                         }
@@ -102,8 +108,10 @@ public class Day9 implements Solution {
     }
 
     private String printChunkedFiles(List<Optional<File>> files) {
-        return files.stream().map(maybeFile -> maybeFile.isPresent() ? String.valueOf(maybeFile.get().id).repeat(maybeFile.get().length) : ".").collect(
-                Collectors.joining(""));
+        return files.stream()
+                .map(maybeFile -> maybeFile.isPresent() ? String.valueOf(maybeFile.get().id)
+                        .repeat(maybeFile.get().length) : ".")
+                .collect(Collectors.joining(""));
     }
 
     private List<Optional<File>> assembleFiles(List<Optional<DiskBlock>> diskLayout) {
@@ -162,7 +170,8 @@ public class Day9 implements Solution {
 
     }
 
-    record File(int id, int length) {}
+    record File(int id, int length) {
+    }
 
     record DiskBlock(int id) {
 
