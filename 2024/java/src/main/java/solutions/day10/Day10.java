@@ -1,5 +1,6 @@
 package solutions.day10;
 
+import com.google.common.collect.Streams;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import solutions.Solution;
@@ -41,6 +42,35 @@ public class Day10 implements Solution {
         System.out.printf("Total score: %d\n", totalScore);
     }
 
+    @Override
+    public void secondPart(String inputFile) {
+        List<List<HikingTrailPart>> topographicMap = readTopographicMap(Utils.readInputAsStream(
+                inputFile));
+        System.out.println("Topographic map: ");
+        System.out.println(printTopographicMap(topographicMap));
+        Set<HikingTrailPart> trailheads = topographicMap.stream()
+                .map(row -> row.stream().filter(HikingTrailPart::isTrailHead).toList())
+                .flatMap(List::stream)
+                .collect(Collectors.toSet());
+
+        System.out.println("Trailhead locations: ");
+        System.out.println(trailheads.stream().map(HikingTrailPart::position).toList());
+
+        int totalScore = 0;
+        for (final HikingTrailPart trailhead : trailheads) {
+            System.out.println("Exploring trailhead at: " + trailhead.position);
+            final Pair<Integer, List<List<HikingTrailPart>>> trailheadScoreAndTraceMap =
+                    exploreTrailheadDistinctTrails(
+                    trailhead,
+                    topographicMap);
+            int trailHeadScore = trailheadScoreAndTraceMap.getLeft();
+            System.out.printf("Trailhead score: %d%n", trailHeadScore);
+            totalScore += trailHeadScore;
+        }
+
+        System.out.printf("Total score: %d\n", totalScore);
+    }
+
     /**
      * @param trailhead      Starting point of the exploration
      * @param topographicMap map of the mountain
@@ -58,6 +88,16 @@ public class Day10 implements Solution {
         return Pair.of(uniqueReachablePeaks.size(), mapCopy);
     }
 
+    private Pair<Integer, List<List<HikingTrailPart>>> exploreTrailheadDistinctTrails(HikingTrailPart trailhead,
+            List<List<HikingTrailPart>> topographicMap
+    ) {
+        List<List<HikingTrailPart>> mapCopy = getMutableMapCopy(topographicMap);
+        // This may contain duplicates
+        List<Point> reachablePeaks = traverse(trailhead, mapCopy, topographicMap, new HashSet<>());
+        //System.out.println(printTopographicMap(mapCopy));
+        return Pair.of(reachablePeaks.size(), mapCopy);
+    }
+
     private List<Point> traverse(
             HikingTrailPart start,
             List<List<HikingTrailPart>> mapCopy,
@@ -67,8 +107,8 @@ public class Day10 implements Solution {
         if (start.isPeak()) {
             return List.of(start.position);
         }
-        mapCopy.get(start.position.y()).set(start.position.x(), new HikingTrailPart(-1, start.position));
-        visited.add(start.position);
+        mapCopy.get(start.position.y())
+                .set(start.position.x(), new HikingTrailPart(-1, start.position));
 
         List<HikingTrailPart> possiblePaths = start.position.getNeighboursInsideGrid(topographicMap)
                 .stream()
@@ -80,7 +120,14 @@ public class Day10 implements Solution {
             return List.of();
         }
 
-        return possiblePaths.stream().map(p -> traverse(p, mapCopy, topographicMap, visited)).flatMap(List::stream).toList();
+        return possiblePaths.stream()
+                .map(p -> traverse(p,
+                                   mapCopy,
+                                   topographicMap,
+                                   Streams.concat(visited.stream(), Stream.of(start.position))
+                                           .collect(Collectors.toSet())))
+                .flatMap(List::stream)
+                .toList();
     }
 
     private List<List<HikingTrailPart>> getMutableMapCopy(List<List<HikingTrailPart>> topographicMap) {
@@ -98,10 +145,6 @@ public class Day10 implements Solution {
 
     }
 
-    @Override
-    public void secondPart(String inputFile) {
-
-    }
 
     private static List<List<HikingTrailPart>> readTopographicMap(Stream<String> input) {
         // Surprisingly java does not have a nice way to iterate over a stream with indices
