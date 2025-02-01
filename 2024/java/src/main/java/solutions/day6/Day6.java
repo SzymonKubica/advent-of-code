@@ -2,9 +2,10 @@ package solutions.day6;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
-import solutions.CommonStructures;
 import solutions.Solution;
 import solutions.Utils;
+import solutions.common.Direction;
+import solutions.common.Point;
 
 import java.util.*;
 import java.util.List;
@@ -43,7 +44,7 @@ public class Day6 implements Solution {
         var clearGrid = cloneGrid(grid);
         var clearGuard = new Guard(guard.direction, guard.location);
 
-        Set<CommonStructures.Point> newObstructionPositions = new HashSet<>();
+        Set<Point> newObstructionPositions = new HashSet<>();
         do {
             // We need to do the following:
             // - Find all possible places for obstacles that won't result in the guard leaving the
@@ -68,7 +69,7 @@ public class Day6 implements Solution {
             newPossibleGrid.get(position.y()).set(position.x(), GridCell.OBSTACLE_SPECIAL);
             var newGuard = new Guard(clearGuard.direction, clearGuard.location);
 
-            Set<Pair<CommonStructures.Point, CommonStructures.Direction>> guardStates = new HashSet<>();
+            Set<Pair<Point, Direction>> guardStates = new HashSet<>();
 
             do {
                 if (guardStates.contains(Pair.of(newGuard.location, newGuard.direction))) {
@@ -86,13 +87,13 @@ public class Day6 implements Solution {
 
     }
 
-    private Optional<CommonStructures.Point> searchForObstaclesToTheRight(Guard guard,
+    private Optional<Point> searchForObstaclesToTheRight(Guard guard,
                                                                           List<List<GridCell>> grid) {
         // copy the current state of the guard
         Guard projectionRay = new Guard(guard.direction, guard.location);
         List<List<GridCell>> projectionGrid = cloneGrid(grid);
         // save the new location as we only count the new obstruction if it is within the grid.
-        CommonStructures.Point possibleObstructionLocation =
+        Point possibleObstructionLocation =
                 projectionRay.location.translateInDirection(
                 guard.direction);
         if (!possibleObstructionLocation.isInsideGrid(grid)
@@ -126,8 +127,8 @@ public class Day6 implements Solution {
         for (int y = 0; y < grid.size(); y++) {
             for (int x = 0; x < grid.get(0).size(); x++) {
                 if (grid.get(y).get(x) == GridCell.GUARD) {
-                    return Optional.of(new Guard(CommonStructures.Direction.UP,
-                                                 new CommonStructures.Point(x, y)));
+                    return Optional.of(new Guard(Direction.UP,
+                                                 new Point(x, y)));
                 }
             }
         }
@@ -149,8 +150,8 @@ public class Day6 implements Solution {
 
     @AllArgsConstructor
     private class Guard {
-        private CommonStructures.Direction direction;
-        private CommonStructures.Point location;
+        private Direction direction;
+        private Point location;
 
         /**
          * The guard will try to take the next step on the grid according to the puzzle
@@ -158,8 +159,8 @@ public class Day6 implements Solution {
          * optional will be empty indicating that the main 'game' loop
          * is over.
          */
-        public Optional<CommonStructures.Point> takeStepOnGrid(List<List<GridCell>> grid) {
-            CommonStructures.Point nextLocation = location.translateInDirection(direction);
+        public Optional<Point> takeStepOnGrid(List<List<GridCell>> grid) {
+            Point nextLocation = location.translateInDirection(direction);
             if (!nextLocation.isInsideGrid(grid)) {
                 return Optional.empty();
             }
@@ -176,10 +177,10 @@ public class Day6 implements Solution {
 
         private void turnRight() {
             direction = switch (direction) {
-                case UP -> CommonStructures.Direction.RIGHT;
-                case DOWN -> CommonStructures.Direction.LEFT;
-                case LEFT -> CommonStructures.Direction.UP;
-                case RIGHT -> CommonStructures.Direction.DOWN;
+                case UP -> Direction.RIGHT;
+                case DOWN -> Direction.LEFT;
+                case LEFT -> Direction.UP;
+                case RIGHT -> Direction.DOWN;
             };
         }
 

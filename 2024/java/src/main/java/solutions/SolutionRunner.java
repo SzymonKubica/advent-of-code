@@ -1,6 +1,7 @@
 package solutions;
 
 import solutions.day1.Day1;
+import solutions.day10.Day10;
 import solutions.day2.Day2;
 import solutions.day3.Day3;
 import solutions.day4.Day4;
@@ -29,7 +30,8 @@ public class SolutionRunner {
                                            new Day6(),
                                            new Day7(),
                                            new Day8(),
-                                           new Day9());
+                                           new Day9(),
+        new Day10());
 
         int day_idx = day - 1;
         if (day_idx > solutions.size()) {

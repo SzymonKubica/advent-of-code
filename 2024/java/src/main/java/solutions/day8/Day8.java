@@ -1,10 +1,9 @@
 package solutions.day8;
 
-import solutions.CommonStructures;
 import solutions.Solution;
 import solutions.Utils;
+import solutions.common.Point;
 
-import javax.swing.text.html.Option;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,9 +25,9 @@ public class Day8 implements Solution {
         Map<Character, List<Antenna>> sameFrequencyAntennaMap = allAntennas.stream()
                 .collect(Collectors.groupingBy(antenna -> antenna.frequency));
 
-        Set<CommonStructures.Point> uniqueAntinodeLocations = new HashSet<>();
+        Set<Point> uniqueAntinodeLocations = new HashSet<>();
         for (final var alikeAntennas : sameFrequencyAntennaMap.values()) {
-            Set<CommonStructures.Point> points = traceAntinodes(alikeAntennas);
+            Set<Point> points = traceAntinodes(alikeAntennas);
             uniqueAntinodeLocations.addAll(points);
         }
 
@@ -44,7 +43,7 @@ public class Day8 implements Solution {
 
     private void markAntinodes(
             List<List<Optional<Antenna>>> cityMap,
-            Set<CommonStructures.Point> uniqueAntinodeLocations
+            Set<Point> uniqueAntinodeLocations
     ) {
         for (final var p : uniqueAntinodeLocations) {
             cityMap.get(p.y()).set(p.x(), Optional.of(ANTINODE));
@@ -66,9 +65,9 @@ public class Day8 implements Solution {
         Map<Character, List<Antenna>> sameFrequencyAntennaMap = allAntennas.stream()
                 .collect(Collectors.groupingBy(antenna -> antenna.frequency));
 
-        Set<CommonStructures.Point> uniqueAntinodeLocations = new HashSet<>();
+        Set<Point> uniqueAntinodeLocations = new HashSet<>();
         for (final var alikeAntennas : sameFrequencyAntennaMap.values()) {
-            Set<CommonStructures.Point> points = traceAntinodesPart2(alikeAntennas, cityMap);
+            Set<Point> points = traceAntinodesPart2(alikeAntennas, cityMap);
             uniqueAntinodeLocations.addAll(points);
         }
 
@@ -81,33 +80,33 @@ public class Day8 implements Solution {
         System.out.println(printCityMap(cityMap));
     }
 
-    private Set<CommonStructures.Point> traceAntinodesPart2(
+    private Set<Point> traceAntinodesPart2(
             List<Antenna> alikeAntennas,
             List<List<Optional<Antenna>>> grid
     ) {
-        Set<CommonStructures.Point> antinodes = new HashSet<>();
+        Set<Point> antinodes = new HashSet<>();
         for (int i = 0; i < alikeAntennas.size(); i++) {
             for (int j = 0; j < alikeAntennas.size(); j++) {
                 if (i != j) {
-                    CommonStructures.Point a1 = alikeAntennas.get(i).location;
-                    CommonStructures.Point a2 = alikeAntennas.get(j).location;
+                    Point a1 = alikeAntennas.get(i).location;
+                    Point a2 = alikeAntennas.get(j).location;
 
-                    CommonStructures.Point differenceVector = a2.difference(a1);
+                    Point differenceVector = a2.difference(a1);
                     int u = differenceVector.x();
                     int v = differenceVector.y();
 
                     int divisor = gcd(u, v);
-                    CommonStructures.Point diffScaled = new CommonStructures.Point(u / divisor,
+                    Point diffScaled = new Point(u / divisor,
                                                                                    v / divisor);
-                    CommonStructures.Point diffScaledNegative = diffScaled.reflectAboutOrigin();
+                    Point diffScaledNegative = diffScaled.reflectAboutOrigin();
 
-                    CommonStructures.Point antinode1 = a1;
+                    Point antinode1 = a1;
                     while (antinode1.isInsideGrid(grid)) {
                         antinodes.add(antinode1);
                         antinode1 = antinode1.translateBy(diffScaled);
                     }
 
-                    CommonStructures.Point antinode2 = a1;
+                    Point antinode2 = a1;
                     while (antinode2.isInsideGrid(grid)) {
                         antinodes.add(antinode2);
                         antinode2 = antinode2.translateBy(diffScaledNegative);
@@ -129,17 +128,17 @@ public class Day8 implements Solution {
         return gcd.intValue();
     }
 
-    private Set<CommonStructures.Point> traceAntinodes(List<Antenna> alikeAntennas) {
-        Set<CommonStructures.Point> antinodes = new HashSet<>();
+    private Set<Point> traceAntinodes(List<Antenna> alikeAntennas) {
+        Set<Point> antinodes = new HashSet<>();
         for (int i = 0; i < alikeAntennas.size(); i++) {
             for (int j = 0; j < alikeAntennas.size(); j++) {
                 if (i != j) {
-                    CommonStructures.Point a1 = alikeAntennas.get(i).location;
-                    CommonStructures.Point a2 = alikeAntennas.get(j).location;
+                    Point a1 = alikeAntennas.get(i).location;
+                    Point a2 = alikeAntennas.get(j).location;
 
-                    CommonStructures.Point antinode1 = a1.translateBy(a2.difference(a1)
+                    Point antinode1 = a1.translateBy(a2.difference(a1)
                                                                               .reflectAboutOrigin());
-                    CommonStructures.Point antinode2 = a2.translateBy(a1.difference(a2)
+                    Point antinode2 = a2.translateBy(a1.difference(a2)
                                                                               .reflectAboutOrigin());
 
                     antinodes.add(antinode1);
@@ -160,7 +159,7 @@ public class Day8 implements Solution {
             List<Optional<Antenna>> row = new ArrayList<>();
             for (int x = 0; x < chars.size(); x++) {
                 row.add(Antenna.fromCharAndLocation(chars.get(x),
-                                                    new CommonStructures.Point(x, y)));
+                                                    new Point(x, y)));
             }
             cityMap.add(row);
         }
@@ -179,10 +178,10 @@ public class Day8 implements Solution {
                 .collect(Collectors.joining("\n"));
     }
 
-    public record Antenna(char frequency, CommonStructures.Point location) {
+    public record Antenna(char frequency, Point location) {
         public static Optional<Antenna> fromCharAndLocation(
                 char c,
-                CommonStructures.Point location
+                Point location
         ) {
             return switch (c) {
                 case '.' -> Optional.empty();
