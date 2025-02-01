@@ -40,6 +40,7 @@ fn measure_area_and_perimeter(marked_land: &Vec<Vec<LandLocation>>) -> Vec<(usiz
         .collect::<HashSet<(Point, LandLocation)>>();
 
     while locations_to_visit.len() > 0 {
+        println!("Locations to visit: {:?}", locations_to_visit.len());
         // Pick any patch of land not yet visited
         let curr = locations_to_visit
             .iter()

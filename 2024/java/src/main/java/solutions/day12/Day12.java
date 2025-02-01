@@ -1,13 +1,13 @@
 package solutions.day12;
 
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.tuple.Pair;
 import solutions.Solution;
 import solutions.Utils;
 import solutions.common.Point;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -26,10 +26,19 @@ public class Day12 implements Solution {
         System.out.println("Farm map with fences and in-land boundaries:");
         System.out.println(printFarmMap(farmMapClassified));
 
-        
+        List<List<Pair<FarmLand, Point>>> distinctRegions = findDistinctRegions(farmMapClassified);
 
+        int totalPrice = distinctRegions.stream()
+                .map(region -> region.stream().map(Pair::getLeft).toList())
+                .map(Day12::calculateAreaAndPerimeter)
+                .map(pair -> getPrice(pair.getLeft(), pair.getRight()))
+                .reduce(Integer::sum)
+                .get();
+
+        System.out.printf("Total price of the garden fence: %d\n", totalPrice);
 
     }
+
 
     @Override
     public void secondPart(String inputFile) {
@@ -41,7 +50,7 @@ public class Day12 implements Solution {
         assert !farmMap.isEmpty() : "Farm land map cannot be empty";
 
         List<List<FarmLand>> farmMapDilated = new ArrayList<>();
-        int width =  farmMap.get(0).size();
+        int width = farmMap.get(0).size();
         final List<FarmLand> emptyRow = IntStream.range(0, 2 * width - 1)
                 .mapToObj(_i -> (FarmLand) new Empty())
                 .toList();
@@ -63,23 +72,87 @@ public class Day12 implements Solution {
 
     private List<List<FarmLand>> classifyFencesAndBetweenLand(List<List<FarmLand>> farmMap) {
         List<List<FarmLand>> mapCopy = getFarmMapCopy(farmMap);
-        int width =  farmMap.get(0).size();
+        int width = farmMap.get(0).size();
         for (int i = 0; i < mapCopy.size(); i++) {
             for (int j = 0; j < width; j++) {
                 Point location = new Point(j, i);
-                List<FarmLand> neighbours = location.getNineNeighboursInsideGrid(mapCopy);
-                Set<Character> neighbourTypes = neighbours.stream().filter(nb -> nb instanceof GardenPlot).map(g -> ((GardenPlot) g).type).collect(
-                        Collectors.toSet());
+                List<FarmLand> neighbours = location.getNeighboursInsideGrid(mapCopy);
+                Set<Character> neighbourTypes = neighbours.stream()
+                        .filter(nb -> nb instanceof GardenPlot)
+                        .map(g -> ((GardenPlot) g).type)
+                        .collect(Collectors.toSet());
                 if (location.indexGrid(farmMap) instanceof Empty) {
                     if (neighbourTypes.size() != 1) {
                         mapCopy.get(i).set(j, new Fence());
                     } else {
-                        mapCopy.get(i).set(j, new BetweenLand(neighbourTypes.stream().toList().getFirst()));
+                        mapCopy.get(i)
+                                .set(j,
+                                     new BetweenLand(neighbourTypes.stream().toList().getFirst().toString().toLowerCase().charAt(0)));
                     }
                 }
             }
         }
         return mapCopy;
+    }
+
+    private List<List<Pair<FarmLand, Point>>> findDistinctRegions(List<List<FarmLand>> farmMapClassified) {
+        List<List<Pair<FarmLand, Point>>> distinctRegions = new ArrayList<>();
+        LinkedHashSet<Point> pointsToVisit = new LinkedHashSet<>();
+        int width = farmMapClassified.get(0).size();
+        for (int i = 0; i < farmMapClassified.size(); i++) {
+            for (int j = 0; j < width; j++) {
+                Point location = new Point(j, i);
+                FarmLand land = location.indexGrid(farmMapClassified);
+                if (land instanceof GardenPlot || land instanceof BetweenLand) {
+                    pointsToVisit.add(location);
+                }
+            }
+        }
+
+        List<Pair<FarmLand, Point>> currentRegion = new ArrayList<>();
+        while (!pointsToVisit.isEmpty()) {
+            System.out.println(pointsToVisit.size());
+            final var regionStart = pointsToVisit.removeFirst();
+            currentRegion.add(Pair.of(regionStart.indexGrid(farmMapClassified), regionStart));
+
+            List<Point> neighboursToVisit = regionStart.getNeighbourLocationsInsideGrid(
+                            farmMapClassified)
+                    .stream()
+                    .filter(pointsToVisit::contains)
+                    .toList();
+
+            Deque<Point> pointsToTraverse = new ArrayDeque<>(neighboursToVisit);
+
+            while (!pointsToTraverse.isEmpty()) {
+                final var curr = pointsToTraverse.removeFirst();
+                currentRegion.add(Pair.of(curr.indexGrid(farmMapClassified), curr));
+                pointsToVisit.remove(curr);
+                List<Point> neighbours = curr.getNeighbourLocationsInsideGrid(farmMapClassified)
+                        .stream()
+                        .filter(pointsToVisit::contains)
+                        .filter(Predicate.not(pointsToTraverse::contains))
+                        .toList();
+                pointsToTraverse.addAll(neighbours);
+            }
+
+            distinctRegions.add(currentRegion);
+            currentRegion = new ArrayList<>();
+        }
+        return distinctRegions;
+    }
+
+    private int getPrice(int area, int perimeter) {
+        return area * perimeter;
+    }
+
+    static private Pair<Integer, Integer> calculateAreaAndPerimeter(Collection<FarmLand> region) {
+        int area = (int) region.stream().filter(farmLand -> farmLand instanceof GardenPlot).count();
+        int betweenPlotsCount = (int) region.stream()
+                .filter(farmLand -> farmLand instanceof BetweenLand)
+                .count();
+
+        int perimeter = 4 * area - 2 * betweenPlotsCount;
+        return Pair.of(area, perimeter);
     }
 
     private List<List<FarmLand>> getFarmMapCopy(List<List<FarmLand>> grid) {
