@@ -131,11 +131,7 @@ public class Day10 implements Solution {
     }
 
     private List<List<HikingTrailPart>> getMutableMapCopy(List<List<HikingTrailPart>> topographicMap) {
-        List<List<HikingTrailPart>> copy = new ArrayList<>();
-        for (final var row : topographicMap) {
-            copy.add(new ArrayList<>(row));
-        }
-        return copy;
+        return Utils.getMutableGridCopy(topographicMap);
     }
 
     private String printTopographicMap(List<List<HikingTrailPart>> topographicMap) {

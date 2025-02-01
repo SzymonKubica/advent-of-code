@@ -1,5 +1,7 @@
 package solutions.common;
 
+import solutions.day12.Day12;
+
 import java.util.List;
 
 /**
@@ -48,6 +50,18 @@ public record Point(int x, int y) {
                        this.translateBy(WEST_UNIT_VECTOR));
     }
 
+    public List<Point> getNineNeighbours() {
+        return List.of(this.translateBy(NORTH_UNIT_VECTOR),
+                       this.translateBy(NORTH_EAST_VECTOR),
+                       this.translateBy(EAST_UNIT_VECTOR),
+                       this.translateBy(SOUTH_EAST_VECTOR),
+                       this.translateBy(SOUTH_UNIT_VECTOR),
+                       this.translateBy(SOUTH_WEST_VECTOR),
+                       this.translateBy(WEST_UNIT_VECTOR),
+                       this.translateBy(NORTH_WEST_VECTOR)
+                       );
+    }
+
     public Point translateInDirection(Direction direction) {
         return switch (direction) {
             case UP -> this.translateBy(NORTH_UNIT_VECTOR);
@@ -67,7 +81,15 @@ public record Point(int x, int y) {
 
 
     private static final Point NORTH_UNIT_VECTOR = new Point(0, -1);
+    private static final Point NORTH_EAST_VECTOR = new Point(1, -1);
     private static final Point EAST_UNIT_VECTOR = new Point(1, 0);
+    private static final Point SOUTH_EAST_VECTOR = new Point(1, 1);
     private static final Point SOUTH_UNIT_VECTOR = new Point(0, 1);
+    private static final Point SOUTH_WEST_VECTOR = new Point(-1, 1);
     private static final Point WEST_UNIT_VECTOR = new Point(-1, 0);
+    private static final Point NORTH_WEST_VECTOR = new Point(-1, -1);
+
+    public <T> List<T> getNineNeighboursInsideGrid(List<List<T>> grid) {
+        return getNineNeighbours().stream().filter(n -> n.isInsideGrid(grid)).map(n -> n.indexGrid(grid)).toList();
+    }
 }

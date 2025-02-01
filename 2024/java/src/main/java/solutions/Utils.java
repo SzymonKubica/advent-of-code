@@ -1,8 +1,11 @@
 package solutions;
 
+import solutions.day10.Day10;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -16,6 +19,14 @@ public class Utils {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static <T> List<List<T>> getMutableGridCopy(List<List<T>> grid) {
+        List<List<T>> copy = new ArrayList<>();
+        for (final var row : grid) {
+            copy.add(new ArrayList<>(row));
+        }
+        return copy;
     }
 
     /**
