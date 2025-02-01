@@ -57,9 +57,14 @@ public record Point(int x, int y) {
         };
     }
 
-    public <T> List<Point> getNeighboursInsideGrid(List<List<T>> grid) {
+    public <T> List<Point> getNeighbourLocationsInsideGrid(List<List<T>> grid) {
         return getNeighbours().stream().filter(n -> n.isInsideGrid(grid)).toList();
     }
+
+    public <T> List<T> getNeighboursInsideGrid(List<List<T>> grid) {
+        return getNeighbours().stream().filter(n -> n.isInsideGrid(grid)).map(n -> n.indexGrid(grid)).toList();
+    }
+
 
     private static final Point NORTH_UNIT_VECTOR = new Point(0, -1);
     private static final Point EAST_UNIT_VECTOR = new Point(1, 0);

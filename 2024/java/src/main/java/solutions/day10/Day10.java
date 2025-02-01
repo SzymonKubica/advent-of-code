@@ -6,9 +6,7 @@ import solutions.Solution;
 import solutions.Utils;
 import solutions.common.Point;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,18 +16,85 @@ public class Day10 implements Solution {
     public void firstPart(String inputFile) {
         List<List<HikingTrailPart>> topographicMap = readTopographicMap(Utils.readInputAsStream(
                 inputFile));
+        System.out.println("Topographic map: ");
+        System.out.println(printTopographicMap(topographicMap));
         Set<HikingTrailPart> trailheads = topographicMap.stream()
                 .map(row -> row.stream().filter(HikingTrailPart::isTrailHead).toList())
                 .flatMap(List::stream)
                 .collect(Collectors.toSet());
 
-        System.out.println(topographicMap);
-        System.out.println(printTopographicMap(topographicMap));
+        System.out.println("Trailhead locations: ");
+        System.out.println(trailheads.stream().map(HikingTrailPart::position).toList());
+
+        int totalScore = 0;
+        for (final HikingTrailPart trailhead : trailheads) {
+            System.out.println("Exploring trailhead at: " + trailhead.position);
+            final Pair<Integer, List<List<HikingTrailPart>>> trailheadScoreAndTraceMap =
+                    exploreTrailhead(
+                    trailhead,
+                    topographicMap);
+            int trailHeadScore = trailheadScoreAndTraceMap.getLeft();
+            System.out.printf("Trailhead score: %d%n", trailHeadScore);
+            totalScore += trailHeadScore;
+        }
+
+        System.out.printf("Total score: %d\n", totalScore);
+    }
+
+    /**
+     * @param trailhead      Starting point of the exploration
+     * @param topographicMap map of the mountain
+     * @return pair of (trailhead score, trace on the map after exploration
+     */
+    private Pair<Integer, List<List<HikingTrailPart>>> exploreTrailhead(
+            HikingTrailPart trailhead,
+            List<List<HikingTrailPart>> topographicMap
+    ) {
+        List<List<HikingTrailPart>> mapCopy = getMutableMapCopy(topographicMap);
+        // This may contain duplicates
+        List<Point> reachablePeaks = traverse(trailhead, mapCopy, topographicMap, new HashSet<>());
+        Set<Point> uniqueReachablePeaks = new HashSet<>(reachablePeaks);
+        //System.out.println(printTopographicMap(mapCopy));
+        return Pair.of(uniqueReachablePeaks.size(), mapCopy);
+    }
+
+    private List<Point> traverse(
+            HikingTrailPart start,
+            List<List<HikingTrailPart>> mapCopy,
+            List<List<HikingTrailPart>> topographicMap,
+            Set<Point> visited
+    ) {
+        if (start.isPeak()) {
+            return List.of(start.position);
+        }
+        mapCopy.get(start.position.y()).set(start.position.x(), new HikingTrailPart(-1, start.position));
+        visited.add(start.position);
+
+        List<HikingTrailPart> possiblePaths = start.position.getNeighboursInsideGrid(topographicMap)
+                .stream()
+                .filter(nb -> nb.height == start.height + 1)
+                .filter(nb -> !visited.contains(nb.position))
+                .toList();
+
+        if (possiblePaths.isEmpty()) {
+            return List.of();
+        }
+
+        return possiblePaths.stream().map(p -> traverse(p, mapCopy, topographicMap, visited)).flatMap(List::stream).toList();
+    }
+
+    private List<List<HikingTrailPart>> getMutableMapCopy(List<List<HikingTrailPart>> topographicMap) {
+        List<List<HikingTrailPart>> copy = new ArrayList<>();
+        for (final var row : topographicMap) {
+            copy.add(new ArrayList<>(row));
+        }
+        return copy;
     }
 
     private String printTopographicMap(List<List<HikingTrailPart>> topographicMap) {
-        return topographicMap.stream().map(r -> r.stream().map(HikingTrailPart::toString).collect(
-                Collectors.joining(""))).collect(Collectors.joining("\n"));
+        return topographicMap.stream()
+                .map(r -> r.stream().map(HikingTrailPart::toString).collect(Collectors.joining("")))
+                .collect(Collectors.joining("\n"));
 
     }
 
@@ -43,7 +108,9 @@ public class Day10 implements Solution {
         AtomicInteger rowIndex = new AtomicInteger();
         AtomicInteger columnIndex = new AtomicInteger();
         // we use the length to increment the row index module row length
-        return input.map(str -> Triple.of(str.chars().mapToObj(c -> (char) c), columnIndex.getAndAdd(1), str.length()))
+        return input.map(str -> Triple.of(str.chars().mapToObj(c -> (char) c),
+                                          columnIndex.getAndAdd(1),
+                                          str.length()))
                 .map(t -> Triple.of(t.getLeft()
                                             .map(String::valueOf)
                                             .map(Integer::parseInt)
@@ -51,9 +118,10 @@ public class Day10 implements Solution {
                 .map(t -> t.getLeft()
                         .stream()
                         .map(h -> new HikingTrailPart(h,
-                                                      new Point(
-                                                                rowIndex.getAndSet((rowIndex.get() + 1)
-                                                                                   % t.getRight()), t.getMiddle())))
+                                                      new Point(rowIndex.getAndSet((rowIndex.get()
+                                                                                    + 1)
+                                                                                   % t.getRight()),
+                                                                t.getMiddle())))
                         .toList())
                 .toList();
 
@@ -64,13 +132,24 @@ public class Day10 implements Solution {
             return height == 0;
         }
 
+        boolean isPeak() {
+            return height == 9;
+        }
+
+        boolean isVisited() {
+            return height == -1;
+        }
+
         @Override
         public String toString() {
-            if (height == 0) {
+            if (isTrailHead()) {
                 return "_";
             }
-            if (height == 9) {
+            if (isPeak()) {
                 return "*";
+            }
+            if (isVisited()) {
+                return "x";
             }
             return String.valueOf(height);
         }
