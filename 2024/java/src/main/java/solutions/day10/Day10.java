@@ -148,6 +148,7 @@ public class Day10 implements Solution {
 
     private static List<List<HikingTrailPart>> readTopographicMap(Stream<String> input) {
         // Surprisingly java does not have a nice way to iterate over a stream with indices
+        // so we need to use this cursed code
         AtomicInteger rowIndex = new AtomicInteger();
         AtomicInteger columnIndex = new AtomicInteger();
         // we use the length to increment the row index module row length
