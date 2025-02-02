@@ -12,12 +12,17 @@ import java.util.List;
  * @param y
  */
 public record Point(int x, int y) {
+    public static Point ORIGIN = new Point(0, 0);
     /**
      * @param translationVector
      * @return This {@link Point} translated by translationVector
      */
     public Point translateBy(Point translationVector) {
         return new Point(x + translationVector.x, y + translationVector.y);
+    }
+
+    public Point translateBy(Point translationVector, int times) {
+        return new Point(x + translationVector.x * times, y + translationVector.y * times);
     }
 
     public Point difference(Point translationVector) {
