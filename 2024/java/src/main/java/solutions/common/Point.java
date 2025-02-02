@@ -97,4 +97,7 @@ public record Point(int x, int y) {
     public <T> List<T> getNineNeighboursInsideGrid(List<List<T>> grid) {
         return getNineNeighbours().stream().filter(n -> n.isInsideGrid(grid)).map(n -> n.indexGrid(grid)).toList();
     }
+
+    public record BigPoint(long x, long y) {
+    }
 }

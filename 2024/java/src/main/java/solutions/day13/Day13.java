@@ -7,6 +7,7 @@ import solutions.Utils;
 import solutions.common.Point;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,14 +20,93 @@ public class Day13 implements Solution {
                 inputFile));
         System.out.println(Utils.toStringLineByLine(machines));
 
-        int totalCost = machines.stream()
+        AtomicInteger progress = new AtomicInteger();
+        AtomicInteger solutionsFound = new AtomicInteger();
+        long totalCost = machines.stream()
                 .map(Day13::findCheapestSolutionCost)
+                .peek(maybeCost -> {
+                    int curr = progress.incrementAndGet();
+                    System.out.printf("Processed (%d/%d) machines.\n", curr, machines.size());
+                    if (maybeCost.isPresent()) {
+                        solutionsFound.incrementAndGet();
+                    }
+                })
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .reduce(Integer::sum)
+                .map(Long::valueOf)
+                .reduce(Long::sum)
                 .get();
 
+        System.out.printf("Solutions found: %d%n", solutionsFound.get());
         System.out.printf("Minimum tokens required to win all possible prices: %d", totalCost);
+    }
+
+    @Override
+    public void secondPart(String inputFile) {
+        List<Triple<Button, Button, Point>> machines = parseClawMachines(Utils.readInputAsStream(
+                inputFile));
+        System.out.println(Utils.toStringLineByLine(machines));
+
+        AtomicInteger progress = new AtomicInteger();
+        AtomicInteger solutionsFound = new AtomicInteger();
+        long totalCost = machines.stream()
+                .map(triple -> Triple.of(triple.getLeft().intoBigButton(),
+                                         triple.getMiddle().intoBigButton(),
+                                         getPartTwoDistantPoint(triple.getRight())))
+                .map(Day13::findCheapestSolutionClosedForm)
+                .peek(maybeCost -> {
+                    int curr = progress.incrementAndGet();
+                    System.out.printf("Processed (%d/%d) machines.\n", curr, machines.size());
+                    if (maybeCost.isPresent()) {
+                        solutionsFound.incrementAndGet();
+                    }
+                })
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .reduce(Long::sum)
+                .get();
+
+        System.out.printf("Solutions found: %d%n", solutionsFound.get());
+        System.out.printf("Minimum tokens required to win all possible prices: %d", totalCost);
+    }
+
+    private static Point.BigPoint getPartTwoDistantPoint(Point originalPrize) {
+        long prizeShift = 10000000000000L;
+        return new Point.BigPoint(prizeShift + originalPrize.x(), prizeShift + originalPrize.y());
+    }
+
+    private static Optional<Long> findCheapestSolutionClosedForm(Triple<BigButton, BigButton,
+            Point.BigPoint> machineConfiguration) {
+        BigButton buttonA = machineConfiguration.getLeft();
+        BigButton buttonB = machineConfiguration.getMiddle();
+        Point.BigPoint prize = machineConfiguration.getRight();
+
+        long xA = buttonA.clawMovement.x();
+        long yA = buttonA.clawMovement.y();
+        long xB = buttonB.clawMovement.x();
+        long yB = buttonB.clawMovement.y();
+
+        long xP = prize.x();
+        long yP = prize.y();
+
+        long determinant = xA * yB - xB * yA;
+
+        if (determinant == 0) {
+            return Optional.empty();
+        }
+        if ((xP * yB - xB * yP) % determinant != 0) {
+            return Optional.empty();
+        }
+        if ((xA * yP - xP * yA) % determinant != 0) {
+            return Optional.empty();
+        }
+
+        long aPresses = (xP * yB - xB * yP) / determinant;
+        long bPresses = (xA * yP - xP * yA) / determinant;
+
+        long cost = 3 * aPresses + bPresses;
+        System.out.printf("Total cost using the closed-form solution: %d%n", cost);
+        return Optional.of(cost);
     }
 
     private static final int MAXIMUM_BUTTON_PRESSES = 100;
@@ -42,17 +122,6 @@ public class Day13 implements Solution {
         // - if 100 * (A_x + B_x) < P_x or same in y direction, we short circuit and do
         // not even search at all as the prize is not reachable.
 
-        // First identify impossible solutions:
-        if (MAXIMUM_BUTTON_PRESSES * (buttonA.clawMovement.x() + buttonB.clawMovement.x())
-            < prize.x()) {
-            return Optional.empty();
-        }
-
-        if (MAXIMUM_BUTTON_PRESSES * (buttonA.clawMovement.y() + buttonB.clawMovement.y())
-            < prize.y()) {
-            return Optional.empty();
-        }
-
         // Start the brute-force for the button that has the lower number of maximum presses
         int maxPressA = buttonA.findMaximumPossiblePresses(prize);
         int maxPressB = buttonB.findMaximumPossiblePresses(prize);
@@ -63,7 +132,8 @@ public class Day13 implements Solution {
         Button constrainedButton = maxPressA > maxPressB ? buttonA : buttonB;
         int maxPressBruteForceConstraint = Math.min(maxPressA, maxPressB);
 
-        int searchSpaceBound = Math.min(MAXIMUM_BUTTON_PRESSES, maxPressBruteForceConstraint);
+        int searchSpaceBound = Math.min(maxPressBruteForceConstraint, MAXIMUM_BUTTON_PRESSES);
+
 
         System.out.printf(
                 "Initiating brute-force for button %s over key-press search space: [1,%d]\n",
@@ -84,20 +154,34 @@ public class Day13 implements Solution {
                     prize.translateBy(locationAfterPressingFirst.reflectAboutOrigin());
 
             if (remainingDisplacement.x() % constrainedButton.clawMovement.x() == 0
-                && remainingDisplacement.y() % constrainedButton.clawMovement.y() == 0) {
+                && remainingDisplacement.y() % constrainedButton.clawMovement.y() == 0
+                && remainingDisplacement.x() >= 0
+                && remainingDisplacement.y() >= 0) {
+                // We need to ensure that it is equally divided.
                 int secondButtonPresses = remainingDisplacement.x()
                                           / constrainedButton.clawMovement.x();
-                int cost = bruteForceCandidate.cost * pressCount
-                           + constrainedButton.cost * secondButtonPresses;
-                System.out.printf(
-                        "Found solution:\nPress %s %d times.\nPress %s %d times.\nCost: %d\n",
-                        bruteForceCandidate,
-                        pressCount,
-                        constrainedButton,
-                        secondButtonPresses,
-                        cost);
+                int secondButtonPressesY = remainingDisplacement.y()
+                                           / constrainedButton.clawMovement.y();
 
-                solutionCosts.add(cost);
+                if (secondButtonPressesY == secondButtonPresses) {
+                    int cost = bruteForceCandidate.cost * pressCount
+                               + constrainedButton.cost * secondButtonPresses;
+                    System.out.printf(
+                            "Found solution to reach %s:\nPress %s %d times.\nPress %s %d times"
+                            + ".\nCost: %d\nCheck X: %d\nCheck Y: %d\n",
+                            prize,
+                            bruteForceCandidate,
+                            pressCount,
+                            constrainedButton,
+                            secondButtonPresses,
+                            cost,
+                            bruteForceCandidate.clawMovement.x() * pressCount
+                            + constrainedButton.clawMovement.x() * secondButtonPresses,
+                            bruteForceCandidate.clawMovement.y() * pressCount
+                            + constrainedButton.clawMovement.y() * secondButtonPresses);
+                    solutionCosts.add(cost);
+                }
+
             }
         }
 
@@ -110,10 +194,6 @@ public class Day13 implements Solution {
         return Optional.of(minimumCost);
     }
 
-    @Override
-    public void secondPart(String inputFile) {
-
-    }
 
     private List<Triple<Button, Button, Point>> parseClawMachines(Stream<String> input) {
         String allInput = input.collect(Collectors.joining("\n"));
@@ -184,5 +264,15 @@ public class Day13 implements Solution {
 
             return presses;
         }
+
+        BigButton intoBigButton() {
+            return new BigButton(cost,
+                                 new Point.BigPoint((long) clawMovement.x(),
+                                                    (long) clawMovement.y()));
+        }
+
+    }
+
+    record BigButton(int cost, Point.BigPoint clawMovement) {
     }
 }
