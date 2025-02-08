@@ -43,6 +43,12 @@ public record Point(int x, int y) {
         return grid.get(y).get(x);
     }
 
+    public <T> T indexGridAndSet(List<List<T>> grid, T value) {
+        assert isInsideGrid(grid) :
+                "We can only index into the grid when the location is inside of it.";
+        return grid.get(y).set(x, value);
+    }
+
     /**
      * @return List of neighbour positions directly adjacent to this
      * on a 2D grid. Note that cells that are adjacent but diagonally
@@ -96,6 +102,18 @@ public record Point(int x, int y) {
 
     public <T> List<T> getNineNeighboursInsideGrid(List<List<T>> grid) {
         return getNineNeighbours().stream().filter(n -> n.isInsideGrid(grid)).map(n -> n.indexGrid(grid)).toList();
+    }
+
+    public Point moveInDirection(Direction direction) {
+        return this.moveInDirection(direction, 1);
+    }
+    public Point moveInDirection(Direction direction, int times) {
+        return switch (direction) {
+            case UP -> this.translateBy(NORTH_UNIT_VECTOR);
+            case DOWN -> this.translateBy(SOUTH_UNIT_VECTOR);
+            case LEFT -> this.translateBy(WEST_UNIT_VECTOR);
+            case RIGHT -> this.translateBy(EAST_UNIT_VECTOR);
+        };
     }
 
     public record BigPoint(long x, long y) {
