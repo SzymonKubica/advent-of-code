@@ -14,7 +14,8 @@ import java.util.stream.Stream;
 
 public class Day15 implements Solution {
     private static final int ROBOT_STEP_MILLIS = 250;
-    private static final boolean TERMINAL_RENDERING_ENABLED = Boolean.parseBoolean(System.getenv("USE_LANTERNA"));
+    private static final boolean TERMINAL_RENDERING_ENABLED = Boolean.parseBoolean(System.getenv(
+            "USE_LANTERNA"));
 
 
     @Override
@@ -79,7 +80,10 @@ public class Day15 implements Solution {
         System.out.println(robotLocation);
 
         for (int i = 0; i < robotMoves.size(); i++) {
-            System.out.println("Processing move: (%d/%d)".formatted(i, robotMoves.size()));
+            System.out.println("Processing move: (%d/%d) in direction: %s".formatted(i,
+                                                                                     robotMoves.size(),
+                                                                                     robotMoves.get(
+                                                                                             i)));
             robotLocation = moveRobotSecondPart(robotLocation, robotMoves.get(i), warehouse);
             if (TERMINAL_RENDERING_ENABLED) {
                 printWarehouse(warehouse, screen);
@@ -92,7 +96,16 @@ public class Day15 implements Solution {
                 }
             }
         }
+
+        printWarehouse(warehouse, screen);
+
+        List<Pair<Point, Integer>> coordinates =
+                findBoxGoodsPositioningSystemCoordinatesPart2(warehouse);
+
+        int sum = coordinates.stream().map(Pair::getRight).reduce(Integer::sum).get();
+        System.out.println("Sum of boxes' GPS coordinates: %d".formatted(sum));
     }
+
 
     private List<List<WarehouseLocation>> scaleUpWarehouse(List<List<WarehouseLocation>> warehouse) {
         return warehouse.stream()
@@ -126,6 +139,18 @@ public class Day15 implements Solution {
         return output;
     }
 
+    private List<Pair<Point, Integer>> findBoxGoodsPositioningSystemCoordinatesPart2(List<List<WarehouseLocation>> warehouse) {
+        List<Pair<Point, Integer>> output = new ArrayList<>();
+        for (int y = 0; y < warehouse.size(); y++) {
+            for (int x = 0; x < warehouse.get(0).size(); x++) {
+                if (warehouse.get(y).get(x).equals(WarehouseLocation.BOX_LEFT)) {
+                    output.add(Pair.of(new Point(x, y), 100 * y + x));
+                }
+            }
+        }
+        return output;
+    }
+
     private Point moveRobotSecondPart(
             Point robotLocation,
             Direction move,
@@ -139,16 +164,19 @@ public class Day15 implements Solution {
 
         // Easy case we simply move forward
         if (newLocation.indexGrid(warehouse).equals(WarehouseLocation.EMPTY)) {
-           robotLocation.indexGridAndSet(warehouse, WarehouseLocation.EMPTY);
-           newLocation.indexGridAndSet(warehouse, WarehouseLocation.ROBOT);
-           return newLocation;
+            robotLocation.indexGridAndSet(warehouse, WarehouseLocation.EMPTY);
+            newLocation.indexGridAndSet(warehouse, WarehouseLocation.ROBOT);
+            return newLocation;
+        }
+
+        if (newLocation.indexGrid(warehouse).equals(WarehouseLocation.WALL)) {
+            return robotLocation;
         }
 
         if (move.isHorizontal()) {
             // Handle the easy case
             List<Point> pathToTheClosestWallOrEmpty = projectRayInDirection(move,
                                                                             robotLocation,
-
                                                                             warehouse);
             final List<WarehouseLocation> stateBeforeMove = pathToTheClosestWallOrEmpty.stream()
                     .map(p -> p.indexGrid(warehouse))
@@ -168,7 +196,81 @@ public class Day15 implements Solution {
             return robotLocation.moveInDirection(move);
         }
 
-        return robotLocation;
+        // The hard case: pushing vertically.
+        assert !move.isHorizontal() :
+                "At this point in the code we are only considering pushing up or down";
+        // Idea here is to first project a ray, if everything on the ray is filled,
+        // no point in trying. Else, we need to simulate a 'waterfall' push by maintaining
+        // a queue of blocks that need to be moved.
+
+        List<Point> pathToTheClosestWallOrEmpty = projectRayInDirection(move,
+                                                                        robotLocation,
+                                                                        warehouse);
+
+        final List<WarehouseLocation> stateBeforeMove = pathToTheClosestWallOrEmpty.stream()
+                .map(p -> p.indexGrid(warehouse))
+                .toList();
+
+        if (stateBeforeMove.stream()
+                .noneMatch(loc -> Objects.equals(loc, WarehouseLocation.EMPTY))) {
+            return robotLocation;
+        }
+
+        Deque<Pair<Point, WarehouseLocation>> cellsToMove = new ArrayDeque<>();
+        cellsToMove.add(Pair.of(newLocation, WarehouseLocation.ROBOT));
+        List<Point> updatedLocations = new ArrayList<>();
+
+        do {
+            System.out.println(cellsToMove);
+            var movedCell = cellsToMove.pollFirst();
+            newLocation = movedCell.getLeft();
+            var movedCellValue = movedCell.getRight();
+            System.out.println("Processing cell %s at %s".formatted(movedCellValue, newLocation));
+            if (newLocation.indexGrid(warehouse).equals(WarehouseLocation.WALL)) {
+                // Attempt at moving has failed, one box or the robot itself
+                // cannot be moved.
+                return robotLocation;
+            }
+            final var impactedCell = newLocation.indexGrid(warehouse);
+            newLocation.indexGridAndSet(warehouseCopy, movedCellValue);
+            updatedLocations.add(newLocation);
+            if (impactedCell.equals(WarehouseLocation.BOX_LEFT)) {
+                // The cell that was previously occupied by the right part of the box needs to be
+                // emptied but only if it hasn't already been set by other moved box
+                if (!updatedLocations.contains(newLocation.moveInDirection(Direction.RIGHT))) {
+                    newLocation.moveInDirection(Direction.RIGHT)
+                            .indexGridAndSet(warehouseCopy, WarehouseLocation.EMPTY);
+                }
+                updatedLocations.add(newLocation.moveInDirection(Direction.RIGHT));
+                updatedLocations.add(newLocation);
+                cellsToMove.add(Pair.of(newLocation.moveInDirection(move),
+                                        WarehouseLocation.BOX_LEFT));
+                cellsToMove.add(Pair.of(newLocation.moveInDirection(move)
+                                                .moveInDirection(Direction.RIGHT),
+                                        WarehouseLocation.BOX_RIGHT));
+            } else if (impactedCell.equals(WarehouseLocation.BOX_RIGHT)) {
+                // The cell that was previously occupied by the left part of the box needs to be
+                // emptied
+                if (!updatedLocations.contains(newLocation.moveInDirection(Direction.LEFT))) {
+                    newLocation.moveInDirection(Direction.LEFT)
+                            .indexGridAndSet(warehouseCopy, WarehouseLocation.EMPTY);
+                }
+                updatedLocations.add(newLocation.moveInDirection(Direction.LEFT));
+                cellsToMove.add(Pair.of(newLocation.moveInDirection(move)
+                                                .moveInDirection(Direction.LEFT),
+                                        WarehouseLocation.BOX_LEFT));
+                cellsToMove.add(Pair.of(newLocation.moveInDirection(move),
+                                        WarehouseLocation.BOX_RIGHT));
+            }
+        } while (!cellsToMove.isEmpty());
+
+        for (final var p : updatedLocations) {
+            p.indexGridAndSet(warehouse, p.indexGrid(warehouseCopy));
+        }
+
+
+        robotLocation.indexGridAndSet(warehouse, WarehouseLocation.EMPTY);
+        return robotLocation.moveInDirection(move);
     }
 
     private Point moveRobot(
