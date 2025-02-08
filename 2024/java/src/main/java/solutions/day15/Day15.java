@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Day15 implements Solution {
-    private static final int ROBOT_STEP_MILLIS = 250;
+    private static final int ROBOT_STEP_MILLIS = 50;
     private static final boolean TERMINAL_RENDERING_ENABLED = Boolean.parseBoolean(System.getenv(
             "USE_LANTERNA"));
 
@@ -99,8 +99,8 @@ public class Day15 implements Solution {
 
         printWarehouse(warehouse, screen);
 
-        List<Pair<Point, Integer>> coordinates =
-                findBoxGoodsPositioningSystemCoordinatesPart2(warehouse);
+        List<Pair<Point, Integer>> coordinates = findBoxGoodsPositioningSystemCoordinatesPart2(
+                warehouse);
 
         int sum = coordinates.stream().map(Pair::getRight).reduce(Integer::sum).get();
         System.out.println("Sum of boxes' GPS coordinates: %d".formatted(sum));
