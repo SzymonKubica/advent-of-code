@@ -18,4 +18,13 @@ public enum Direction {
     public boolean isHorizontal() {
         return List.of(LEFT, RIGHT).contains(this);
     }
+
+    public boolean isOpposite(Direction direction) {
+        return switch (this) {
+            case UP -> direction.equals(DOWN);
+            case DOWN -> direction.equals(UP);
+            case LEFT -> direction.equals(RIGHT);
+            case RIGHT -> direction.equals(LEFT);
+        };
+    }
 }
