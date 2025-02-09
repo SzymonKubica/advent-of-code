@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Day15 implements Solution {
-    private static final int ROBOT_STEP_MILLIS = 50;
+    private static final int ROBOT_STEP_MILLIS = 25;
     private static final boolean TERMINAL_RENDERING_ENABLED = Boolean.parseBoolean(System.getenv(
             "USE_LANTERNA"));
 
