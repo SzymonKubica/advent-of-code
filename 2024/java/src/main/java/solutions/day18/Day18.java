@@ -56,7 +56,7 @@ public class Day18 implements Solution {
 
         TerminalScreen screen = null;
         if (FANCY_VISUALIZATION) {
-            screen = new TerminalScreen();
+            screen = new TerminalScreen(6);
         }
 
         simulateFallingBytes(grid, fallingBytes.subList(0, config.fallingBytesToSimulate()));
@@ -150,6 +150,61 @@ public class Day18 implements Solution {
             }
         }
         return parentMap;
+    }
+
+    private static boolean isExitReachable(
+            TerminalScreen screen,
+            Point start,
+            Point end,
+            List<List<MemoryCell>> grid
+    ) {
+        Map<Point, Integer> costMap = new HashMap<>();
+        List<Point> pointsToVisit = new ArrayList<>();
+
+        // This set is not needed by the algorithm, it is
+        // only used for visualisation
+        HashSet<Point> visited = new HashSet<>();
+
+        costMap.put(start, 0);
+        pointsToVisit.add(start);
+
+
+        grid.stream().forEach(row -> row.forEach(cell -> {
+            if (!cell.location.equals(start) && cell.type.equals(MemoryType.HEALTHY)) {
+                costMap.put(cell.location, Integer.MAX_VALUE);
+                pointsToVisit.add(cell.location);
+            }
+        }));
+
+        Map<Point, Point> parentMap = new HashMap<>();
+
+        while (!pointsToVisit.isEmpty()) {
+            pointsToVisit.sort(Comparator.comparingInt(costMap::get));
+            Point curr = pointsToVisit.removeFirst();
+            visited.add(curr);
+            if (curr.equals(end)) {
+                System.out.println("Exit found");
+                System.out.println("Steps required to reach the exit: %d".formatted(costMap.get(curr)));
+                return costMap.get(curr) != Integer.MAX_VALUE;
+            }
+
+            for (Point nb : curr.getNeighbourLocationsInsideGrid(grid)) {
+                if (pointsToVisit.contains(nb)) {
+                    int currentNeighbourCost = costMap.get(nb);
+                    int costThroughCurr = costMap.get(curr) + 1;
+
+                    if (costThroughCurr <= currentNeighbourCost && costMap.get(curr) != Integer.MAX_VALUE) {
+                        costMap.put(nb, costThroughCurr);
+                        parentMap.put(nb, curr);
+                    }
+                }
+            }
+
+            if (FANCY_VISUALIZATION) {
+                visualizeAlgorithmStep(screen, grid, visited, costMap);
+            }
+        }
+        return false;
     }
 
 
@@ -249,6 +304,40 @@ public class Day18 implements Solution {
 
     @Override
     public void secondPart(String inputFile) {
+        List<Point> fallingBytes = parseFallingStones(Utils.readInputAsStream(inputFile));
+        final var config = resolvePuzzleConfiguration(inputFile);
+
+        System.out.println("Using puzzle config: %s".formatted(config));
+        if (FANCY_VISUALIZATION) {
+            System.out.println("Using Lanterna-based visualization. Tick milliseconds: %d".formatted(
+                    SIMULATION_TICK_MILLIS));
+        }
+        List<List<MemoryCell>> grid = initializeGrid(config.gridSize());
+
+        System.out.println("Grid after initialization: ");
+        System.out.println(printGrid(grid));
+
+        TerminalScreen screen = null;
+        if (FANCY_VISUALIZATION) {
+            screen = new TerminalScreen(6);
+        }
+
+        simulateFallingBytes(grid, fallingBytes.subList(0, config.fallingBytesToSimulate()));
+        System.out.println("Grid after simulating initial falling bytes: ");
+        System.out.println(printGrid(grid));
+
+        int nextFallingByteIndex = config.fallingBytesToSimulate();
+        boolean blockingByteFound = false;
+        while (!blockingByteFound) {
+            System.out.println("Simulating falling byte: %s (%d/%d)".formatted(fallingBytes.get(nextFallingByteIndex), nextFallingByteIndex, fallingBytes.size()));
+            simulateFallingBytes(grid, List.of(fallingBytes.get(nextFallingByteIndex)));
+            Point start = new Point(0, 0);
+            Point end = new Point(config.gridSize() - 1, config.gridSize() - 1);
+            blockingByteFound |= !isExitReachable(screen, start, end, grid);
+            nextFallingByteIndex++;
+        }
+        System.out.println("Found a byte that blocks the exit.");
+
 
     }
 
