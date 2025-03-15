@@ -36,7 +36,6 @@ public class Day20 implements Solution {
                                                                                       shortestPathParentMap,
                                                                                       start,
                                                                                       end);
-
         /*
          This whole business of finding the shortest path using Dijkstra seems a bit overkill.
          We need to check the actual puzzle input and determine if the path is linear and always
@@ -57,7 +56,36 @@ public class Day20 implements Solution {
            find the answer faster.
          */
 
-        System.out.println(printRaceTrack(raceTrackWithShortestPath));
+        // Now we need to iterate over the shortest path and scan for the possible shortcuts to take
+
+        final List<Shortcut> shortcuts = walkShortestPathAndFindShortcuts(raceTrack,
+                                                                          shortestPathParentMap,
+                                                                          costMap,
+                                                                          start,
+                                                                          end);
+
+        final Map<Integer, List<Shortcut>> timeSavedToShortcut = shortcuts.stream()
+                .collect(Collectors.groupingBy(shortcut -> shortcut.costSaved));
+
+        int eligibleShortcutCount = 0;
+        for (final var entry : timeSavedToShortcut.entrySet()
+                .stream()
+                .sorted(Comparator.comparingInt(entry -> entry.getValue().size()))
+                .toList()) {
+            if (entry.getKey() >= 100) {
+                eligibleShortcutCount += entry.getValue().size();
+            }
+            if (entry.getValue().size() > 1) {
+                System.out.println("There are %d cheats that save %d picoseconds.".formatted(entry.getValue()
+                                                                                                     .size(),
+                                                                                             entry.getKey()));
+            } else {
+                System.out.println("There is one cheat that saves %d picoseconds.".formatted(entry.getKey()));
+            }
+        }
+
+        System.out.println("There are %d shortcuts that save at least 100 picoseconds.".formatted(
+                eligibleShortcutCount));
 
     }
 
@@ -72,7 +100,9 @@ public class Day20 implements Solution {
         HashSet<Point> visited = new HashSet<>();
         HashMap<Point, Point> pathParentMap = new HashMap<>();
         int cost = 0;
-        Set<RaceTrackCell> traversableTrackTypes = Set.of(RaceTrackCell.TRACK, RaceTrackCell.START, RaceTrackCell.END);
+        Set<RaceTrackCell> traversableTrackTypes = Set.of(RaceTrackCell.TRACK,
+                                                          RaceTrackCell.START,
+                                                          RaceTrackCell.END);
         do {
             costMap.put(current, cost);
             visited.add(current);
@@ -82,15 +112,127 @@ public class Day20 implements Solution {
                     .filter(Predicate.not(visited::contains))
                     .toList();
 
-            assert neighbours.size() == 1: "The path is assumed to be linear and contain no crossroads";
+            assert neighbours.size() == 1 :
+                    "The path is assumed to be linear and contain no crossroads";
 
             pathParentMap.put(neighbours.getFirst(), current);
             current = neighbours.getFirst();
             cost += 1;
 
         } while (!current.equals(endLocation));
+        costMap.put(endLocation, cost);
 
         return pathParentMap;
+    }
+
+    private record Shortcut(Point from, Point to, int costSaved) {
+    }
+
+    private List<Shortcut> walkShortestPathAndFindShortcutsPart2(
+            List<List<RaceTrackCell>> raceTrack,
+            HashMap<Point, Point> shortestPathParentMap,
+            HashMap<Point, Integer> costMap,
+            Point startLocation,
+            Point endLocation
+    ) {
+        Point current = startLocation;
+
+        // We need to traverse from start to end to find shortcuts.
+        Map<Point, Point> shortestPathChildMap = shortestPathParentMap.entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+
+        List<Shortcut> accessibleShortcuts = new ArrayList<>();
+        do {
+            // Find all accessible shortcut
+            List<Point> possibleShortcuts = findShortcutLocations(current, raceTrack, 20);
+            for (Point shortcutDestination : possibleShortcuts) {
+                int currentCost = costMap.get(current);
+                int shortcutDestinationCost = costMap.get(shortcutDestination);
+                int shortcutLength = current.getManhattanDistanceTo(shortcutDestination);
+
+                if (shortcutDestinationCost > currentCost) {
+                    // Taking the shortcut takes 2 picoseconds, hence we subtract it from the
+                    // total time saved.
+                    int timeSaved = shortcutDestinationCost - currentCost - shortcutLength;
+                    accessibleShortcuts.add(new Shortcut(current, shortcutDestination, timeSaved));
+                }
+            }
+
+            current = shortestPathChildMap.get(current);
+        } while (!current.equals(endLocation));
+
+        return accessibleShortcuts;
+    }
+
+    private List<Shortcut> walkShortestPathAndFindShortcuts(
+            List<List<RaceTrackCell>> raceTrack,
+            HashMap<Point, Point> shortestPathParentMap,
+            HashMap<Point, Integer> costMap,
+            Point startLocation,
+            Point endLocation
+    ) {
+        Point current = startLocation;
+
+        // We need to traverse from start to end to find shortcuts.
+        Map<Point, Point> shortestPathChildMap = shortestPathParentMap.entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+
+        List<Shortcut> accessibleShortcuts = new ArrayList<>();
+        do {
+            // Find all accessible shortcut
+            List<Point> possibleShortcuts = findShortcutLocations(current, raceTrack);
+            for (Point shortcutDestination : possibleShortcuts) {
+                int currentCost = costMap.get(current);
+                int shortcutDestinationCost = costMap.get(shortcutDestination);
+
+                if (shortcutDestinationCost > currentCost) {
+                    // Taking the shortcut takes 2 picoseconds, hence we subtract it from the
+                    // total time saved.
+                    int timeSaved = shortcutDestinationCost - currentCost - 2;
+                    accessibleShortcuts.add(new Shortcut(current, shortcutDestination, timeSaved));
+                }
+            }
+
+            current = shortestPathChildMap.get(current);
+        } while (!current.equals(endLocation));
+
+        return accessibleShortcuts;
+    }
+
+    private List<Point> findShortcutLocations(Point current, List<List<RaceTrackCell>> raceTrack) {
+        List<Point> accessibleShortcuts = new ArrayList<>();
+
+        for (Point neighbour : current.getNeighbourLocationsInsideGrid(raceTrack)) {
+            if (neighbour.indexGrid(raceTrack).equals(RaceTrackCell.WALL)) {
+                Point shortcutDestination = neighbour.translateBy(neighbour.difference(current));
+                if (shortcutDestination.isInsideGrid(raceTrack) && List.of(RaceTrackCell.TRACK,
+                                                                           RaceTrackCell.END)
+                        .contains(shortcutDestination.indexGrid(raceTrack))) {
+                    accessibleShortcuts.add(shortcutDestination);
+                }
+            }
+        }
+        return accessibleShortcuts;
+    }
+
+    private List<Point> findShortcutLocations(Point current, List<List<RaceTrackCell>> raceTrack, int shortcutLength) {
+        List<Point> accessibleShortcuts = new ArrayList<>();
+
+        for (int yDisplacement = -shortcutLength; yDisplacement <= shortcutLength; yDisplacement++) {
+            for (int xDisplacement = -shortcutLength; xDisplacement <= shortcutLength; xDisplacement++) {
+                if (Math.abs(xDisplacement)+ Math.abs(yDisplacement) <= shortcutLength) {
+                    Point destination = new Point(current.x() + xDisplacement, current.y() + yDisplacement);
+                    if (destination.isInsideGrid(raceTrack) && List.of(RaceTrackCell.TRACK,
+                                                                       RaceTrackCell.END).contains(destination.indexGrid(raceTrack))) {
+                        accessibleShortcuts.add(destination);
+                    }
+                }
+            }
+        }
+
+        return accessibleShortcuts;
     }
 
     private List<List<RaceTrackCell>> traceShortestPath(
@@ -196,6 +338,53 @@ public class Day20 implements Solution {
 
     @Override
     public void secondPart(String inputFile) {
+        final var raceTrack = readRaceTrack(Utils.readInputAsStream(inputFile));
+
+        Point start = findStart(raceTrack);
+        Point end = findEnd(raceTrack);
+
+        // first find the usual shortest path with no cheats
+        //HashMap<Point, Point> shortestPathParentMap = findShortestPath(startLocation, raceTrack);
+        HashMap<Point, Integer> costMap = new HashMap<>();
+        HashMap<Point, Point> shortestPathParentMap = findShortestLinearPath(start,
+                                                                             end,
+                                                                             raceTrack,
+                                                                             costMap);
+
+        assert shortestPathParentMap.containsKey(end) : "Shortest path to the end has to exist";
+
+        System.out.println(start);
+
+        System.out.println(printRaceTrack(raceTrack));
+
+        final List<Shortcut> shortcuts = walkShortestPathAndFindShortcutsPart2(raceTrack,
+                                                                          shortestPathParentMap,
+                                                                          costMap,
+                                                                          start,
+                                                                          end);
+
+        final Map<Integer, List<Shortcut>> timeSavedToShortcut = shortcuts.stream()
+                .collect(Collectors.groupingBy(shortcut -> shortcut.costSaved));
+
+        long eligibleShortcutCount = 0;
+        for (final var entry : timeSavedToShortcut.entrySet()
+                .stream()
+                .sorted(Comparator.comparingInt(entry -> entry.getKey()))
+                .toList()) {
+            if (entry.getKey() >= 100) {
+                eligibleShortcutCount += entry.getValue().size();
+            }
+            if (entry.getValue().size() > 1) {
+                System.out.println("There are %d cheats that save %d picoseconds.".formatted(entry.getValue()
+                                                                                                     .size(),
+                                                                                             entry.getKey()));
+            } else {
+                System.out.println("There is one cheat that saves %d picoseconds.".formatted(entry.getKey()));
+            }
+        }
+
+        System.out.println("There are %d shortcuts that save at least 100 picoseconds.".formatted(
+                eligibleShortcutCount));
 
     }
 

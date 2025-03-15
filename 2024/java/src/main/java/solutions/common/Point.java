@@ -37,6 +37,10 @@ public record Point(int x, int y) {
         return !grid.isEmpty() && 0 <= x && x < grid.get(0).size() && 0 <= y && y < grid.size();
     }
 
+    public int getManhattanDistanceTo(Point other) {
+        return Math.abs(this.x - other.x()) + Math.abs(this.y - other.y());
+    }
+
     public <T> T indexGrid(List<List<T>> grid) {
         assert isInsideGrid(grid) :
                 "We can only index into the grid when the location is inside of it.";
