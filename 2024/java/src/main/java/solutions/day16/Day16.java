@@ -133,7 +133,8 @@ public class Day16 implements Solution {
 
         costMap.put(Pair.of(start, Direction.RIGHT), 0);
         unvisitedSet.add(Pair.of(start, Direction.RIGHT));
-        Map<Pair<Point, Direction>, List<Pair<Point, Direction>>> shortestPathParentMap = new HashMap<>();
+        Map<Pair<Point, Direction>, List<Pair<Point, Direction>>> shortestPathParentMap =
+                new HashMap<>();
 
         TerminalScreen screen = new TerminalScreen();
 
@@ -141,23 +142,19 @@ public class Day16 implements Solution {
             visualiseVisited(screen, unvisitedSet.stream().map(Pair::getLeft).toList(), maze);
         }
 
+        // This is taken by solving part 1
+        int bestPathLength = 143580;
         while (!unvisitedSet.isEmpty()) {
 
             unvisitedSet.sort(Comparator.comparingInt(costMap::get));
             Pair<Point, Direction> curr = unvisitedSet.removeFirst();
 
-            // We need to mark the cost of turning in place
-            for (Direction d : Arrays.stream(Direction.values()).filter(dir -> !dir.equals(curr.getRight())).toList()) {
-                if (d.isOpposite(curr.getRight())) {
-                    costMap.put(Pair.of(curr.getLeft(), d),  costMap.get(curr) + 2000);
-                } else {
-                    costMap.put(Pair.of(curr.getLeft(), d),  costMap.get(curr) + 1000);
-                }
-            }
             if (USE_LANTERNA) {
                 try {
                     Thread.sleep(SIMULATION_TICK_MILLIS);
-                    visualiseVisited(screen, unvisitedSet.stream().map(Pair::getLeft).toList(), maze);
+                    visualiseVisited(screen,
+                                     unvisitedSet.stream().map(Pair::getLeft).toList(),
+                                     maze);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -168,10 +165,16 @@ public class Day16 implements Solution {
                 System.out.println("No more nodes reachable.");
                 break;
             }
+
+            if (currCost > bestPathLength) {
+                System.out.println("The cost of the current node is already higher than the best one. Skipping it.");
+                break;
+            }
             Direction currDirection = curr.getRight();
             List<Pair<Point, Direction>> neighbours = getAvailableNeighbourLocations(curr.getLeft(),
                                                                                      maze,
-                                                                                     HashSet.newHashSet(0));
+                                                                                     HashSet.newHashSet(
+                                                                                             0));
             System.out.println("Accessible neighbours: ");
             System.out.println(Utils.toStringLineByLine(neighbours));
 
@@ -179,7 +182,8 @@ public class Day16 implements Solution {
             for (final var nb : neighbours) {
                 int nbCost = costMap.get(nb);
                 int stepCost = currDirection == nb.getRight() ? 1 : 1001;
-                // If the direction changes we need to update the cost map as we are turning in place
+                // If the direction changes we need to update the cost map as we are turning in
+                // place
                 int costThroughCurrent = currCost + stepCost;
                 System.out.println("Cost through current node: %s".formatted(costThroughCurrent));
                 System.out.println("Cost of neighbour: %s".formatted(nbCost));
@@ -188,11 +192,11 @@ public class Day16 implements Solution {
                 // is the same, it means that we have two paths that are equally good
                 if (costThroughCurrent == nbCost && shortestPathParentMap.containsKey(nb)) {
                     shortestPathParentMap.get(nb).add(curr);
-                } else if (costThroughCurrent < nbCost){
+                } else if (costThroughCurrent < nbCost) {
                     shortestPathParentMap.put(nb, new ArrayList<>(List.of(curr)));
                 }
                 costMap.put(nb, Math.min(nbCost, costThroughCurrent));
-                System.out.println(costMap.get(nb.getLeft()));
+                System.out.println(costMap.get(nb));
                 directionMap.put(nb.getLeft(), nb.getRight());
             }
         }
@@ -200,15 +204,23 @@ public class Day16 implements Solution {
         // entry
         // in the parent map.
         Point end = findEndingPoint(maze).get();
-        List<Integer> endCosts = costMap.entrySet().stream().filter(entry -> entry.getKey().getLeft().equals(end)).map(entry -> entry.getValue()).toList();
-        System.out.println("Cost at the end: %s".formatted(endCosts.stream().min(Integer::compareTo)));
+        List<Integer> endCosts = costMap.entrySet()
+                .stream()
+                .filter(entry -> entry.getKey().getLeft().equals(end))
+                .map(entry -> entry.getValue())
+                .toList();
+        System.out.println("Cost at the end: %s".formatted(endCosts.stream()
+                                                                   .min(Integer::compareTo)));
 
-        System.out.println(Utils.toStringLineByLine(shortestPathParentMap.entrySet().stream().toList()));
+        System.out.println(Utils.toStringLineByLine(shortestPathParentMap.entrySet()
+                                                            .stream()
+                                                            .toList()));
         if (false) {
             return;
         }
         // Now we trace back all paths that end at the end
-        List<Pair<Point, Direction>> pointsToTraceBack = shortestPathParentMap.get(Pair.of(end, Direction.UP));
+        List<Pair<Point, Direction>> pointsToTraceBack = shortestPathParentMap.get(Pair.of(end,
+                                                                                           Direction.UP));
         HashSet<Point> uniquePointsOnBestPaths = new HashSet<>();
         while (!pointsToTraceBack.isEmpty()) {
             final var curr = pointsToTraceBack.removeFirst();
@@ -216,10 +228,13 @@ public class Day16 implements Solution {
             System.out.println("Tracing point: %s".formatted(curr));
             final var parents = shortestPathParentMap.getOrDefault(curr, List.of());
             System.out.println("Parents: %s".formatted(parents));
-            pointsToTraceBack.addAll(parents);
+            pointsToTraceBack.addAll(parents.stream().filter(parent -> !uniquePointsOnBestPaths.contains(parent.getLeft())).toList());
         }
 
-        System.out.println("Total unique locations: %s".formatted(uniquePointsOnBestPaths.size()));
+        visualiseVisited(screen, uniquePointsOnBestPaths.stream().toList(), maze);
+
+        // We need to add 1 to the unique points because the start is not included for some reason.
+        System.out.println("Total unique locations: %s".formatted(uniquePointsOnBestPaths.size() + 1));
     }
 
     private void visualiseVisited(
