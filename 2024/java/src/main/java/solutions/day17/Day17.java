@@ -129,8 +129,9 @@ public class Day17 implements Solution {
         final Program program = computerConfiguration.getRight();
 
 
-        // Running the code above got us the following 4 numbers that make the first part of the
-        // output match the expectation:
+        // Running the code above got us the following 4 numbers that make the first half of the
+        // output match the expectation (i.e. if we run the algorithm with any of the above
+        // numbers, we'll get the output match the 8 last digits of the program memory):
         // 15801536, 15801544, 15801550, 15801568, 15834113, 15834121, 15834126, 15834304,
         // 15834312, 15834318, 15834336, 15932608, 15932616, 15932622, 15932640
         // We can use those as a starting point for our search.
@@ -152,8 +153,22 @@ public class Day17 implements Solution {
                                                     15932622,
                                                     15932640);
 
+        // The next step of this brute-force sieve is to take each of the promising
+        // candidates, try to find next bits of the input that will make the
+        // output match. This is done 3 bits at a time (i.e. we are only testing
+        // for up to 8 different values in each step)
+        // The idea is that for all possible candidates this gives us the
+        // lowest possible ways to extend them to increase the length of the matching
+        // output. Note that the logic isn't 100% rigorous here, it does not
+        // exclude the possibility that if we were to search for more than 8 possibilities
+        // at a time, we could have possibly found candidates that will allow us
+        // to find a smaller solution in the subsequent iterations. Here we hope it does not
+        // happen. Once the search fails, we store the 'dead ends' in the list below
+        // the intention being that we'll then pick the largest dead end which will
+        // be the best candidate to which we'll then apply a more fine-grained search (checking
+        // more possibilities for each extra output digit).
+        Map<Long, String> deadEnds = new HashMap<>();
         for (int candidate : promisingCandidates) {
-
             long shiftedCandidate = ((long) candidate) << 3;
             int matchedOutputLength = 9;
             int steps = 0;
@@ -165,6 +180,8 @@ public class Day17 implements Solution {
                 List<Integer> output = performHardCodedProgramCalculation(shiftedCandidate);
 
                 if (steps > 8) {
+                    long previousMatching = shiftedCandidate - steps;
+                    deadEnds.put(previousMatching, printOutput(performHardCodedProgramCalculation(previousMatching)));
                     unableToMatch = true;
                 }
 
@@ -182,108 +199,117 @@ public class Day17 implements Solution {
                     System.out.println(output);
                     matchedOutputLength += 1;
                     shiftedCandidate <<= 3;
+                    steps = 0;
                 }
 
                 steps++;
                 shiftedCandidate++;
             }
 
-            System.out.println("Finished processing candidate: %d. Final output: %s".formatted(shiftedCandidate, printOutput(performHardCodedProgramCalculation(shiftedCandidate))));
+            System.out.println("Finished processing candidate: %d. Final output: %s".formatted(
+                    shiftedCandidate,
+                    printOutput(performHardCodedProgramCalculation(shiftedCandidate))));
         }
 
-        if (true) {
-            boolean matchFound = false;
-            int index = 0;
-            long registerAOverride = ((long) promisingCandidates.stream()
-                    .min(Comparator.comparingInt(e -> e))
-                    .get()) << 3;
-            // We can repeatedly keep finding the required beginnings
-            registerAOverride = 1011298328L << 3;
-            registerAOverride = 8090386630L << 3;
-            registerAOverride = 64856528481L << 3;
-            registerAOverride = 518852228497L << 3;
-            registerAOverride = 4150817827976L << 3;
-            registerAOverride = 33206542623812L << 3;
-            // TODO: automate this
+        int maxMatchedOutputLength = deadEnds.values()
+                .stream()
+                .mapToInt(String::length)
+                .max()
+                .getAsInt();
 
-            //registerAOverride = 126412291 << 3;
-            //registerAOverride = ((long) promisingCandidates.get(index)) << 24;
-            //long registerAOverride = (long) 0b111 << 45;
-            //long registerAOverride = (long) 246852 << 30;
-            //long registerAOverride = (long) 3760 << 36;
+        Map<Long, String> bestCandidates = deadEnds.entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().length() == maxMatchedOutputLength)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-            // We implement the calc in the native code:
-            System.out.println();
-            while (!matchFound) {
-                //registerAOverride = ((long) promisingCandidates.get(index)) << 24;
-                System.out.println("Register override: " + registerAOverride);
-                List<Integer> output = performHardCodedProgramCalculation(registerAOverride);
-                //if (output.size() > 10) {
-                //if (output.size() > 11) {
-                if (output.size() > 16) {
-                    matchFound = true;
-                }
+        System.out.println(bestCandidates);
+        long minCandidate = bestCandidates.keySet().stream().min(Comparator.comparingLong(e -> e)).get();
 
-                if (true) {
-                    //return;
-                }
+        // Now for each of the best candidates we need to do a similar search, but now we don't impose a constraint
+        // that the next 3 bits need to be determined within checking 8 possibilities.
 
-                //System.out.println(registerAOverride >> 24);
-                System.out.println(output);
+        // We check adding an offset to each of the candidates until a match is found
+        // the idea is that we'll pick a candidate that arrives at the next match first.
+        boolean matchFound = false;
+        long checkedOffset = 1;
+        long bestCandidate = 0;
+        while (!matchFound) {
+            for (long candidate : bestCandidates.keySet()) {
+                long shiftedCandidate = (((long) candidate) << 3) + checkedOffset;
 
-                //System.out.println(program.bytes);
+                System.out.println("Register override: " + shiftedCandidate);
+                List<Integer> output = performHardCodedProgramCalculation(shiftedCandidate);
+
+                System.out.println(printOutput(output));
+                System.out.println(printOutput(program.bytes.subList(program.bytes.size()
+                                                                     - (13),
+                                                                     program.bytes.size())));
                 if (Objects.equals(printOutput(output),
-                                   printOutput(program.bytes.subList(program.bytes.size() - 16,
+                                   printOutput(program.bytes.subList(program.bytes.size()
+                                                                     - (13),
                                                                      program.bytes.size())))) {
                     //if (Objects.equals(printOutput(output), printOutput(program.bytes))) {
                     System.out.println("Match found!");
-                    System.out.println(registerAOverride);
+                    System.out.println(shiftedCandidate);
                     System.out.println(output);
-                    promisingCandidates.add((int) registerAOverride);
-                }
-
-                registerAOverride++;
-            }
-            System.out.println(promisingCandidates);
-
-
-            while (!matchFound) {
-                System.out.println(
-                        "Testing if overriding A to %d will make the program reproduce itself.".formatted(
-                                registerAOverride));
-                final Map<Register, Long> registerMap = computerConfiguration.getLeft();
-
-                System.out.println(registerMap);
-                System.out.println(program);
-
-                ProgramState state = new ProgramState(registerMap, program);
-
-                System.out.println(state.visualizeProgram());
-
-                registerMap.put(Register.A, registerAOverride);
-
-                while (executeInstruction(state)) {
-                }
-
-                System.out.println("Output: %s".formatted(printOutput(state.output)));
-
-                if (Objects.equals(printOutput(state.output), printOutput(state.program.bytes))) {
+                    System.out.printf("Original best candidate: %d", shiftedCandidate - checkedOffset);
                     matchFound = true;
-                    System.out.println("Match found!");
+                    bestCandidate = shiftedCandidate;
                 }
+            }
+            checkedOffset++;
+        }
 
-                registerAOverride++;
+        // Now that we have found the first match for 13 digits above, we continue checking the remaining 3 only for that
+        // one and hope it is going to lead us to the smallest solution
+        int testedMatchDigits = 14;
+        while (testedMatchDigits <= 16) {
+            matchFound = false;
+            checkedOffset = 1;
+            while (!matchFound) {
+                    long shiftedCandidate = (((long) bestCandidate) << 3) + checkedOffset;
+
+                    System.out.println("Register override: " + shiftedCandidate);
+                    List<Integer> output = performHardCodedProgramCalculation(shiftedCandidate);
+
+                    System.out.println(printOutput(output));
+                    System.out.println(printOutput(program.bytes.subList(program.bytes.size()
+                                                                         - (testedMatchDigits),
+                                                                         program.bytes.size())));
+                    if (Objects.equals(printOutput(output),
+                                       printOutput(program.bytes.subList(program.bytes.size()
+                                                                         - (testedMatchDigits),
+                                                                         program.bytes.size())))) {
+                        //if (Objects.equals(printOutput(output), printOutput(program.bytes))) {
+                        System.out.println("Match found!");
+                        System.out.println(shiftedCandidate);
+                        System.out.println(printOutput(output));
+                        bestCandidate = shiftedCandidate;
+                        testedMatchDigits++;
+                        matchFound = true;
+                    }
+                checkedOffset++;
             }
         }
+
+        // Now if this terminates, we need to take the shifted candidate and hope that it is the lowest
+        // possible solution. In my case 265652340990875 turned out to be the one.
     }
 
+    /**
+     * This hard-codes the program that is specified in the puzzle input.
+     * The reason we need this is:
+     * - it is not possible to efficiently find the smallest solution satisfying the requirement
+     * from part 2 without actually
+     * understanding what the program is doing
+     * - doing brute-force searching using this 'native' implementation is faster.
+     */
     private static List<Integer> performHardCodedProgramCalculation(long registerAOverride) {
         long A = registerAOverride;
         long B = 0;
         long C = 0;
         List<Integer> output = new ArrayList<>();
 
-        //System.out.println("Testing %s...".formatted(registerAOverride));
         while (A != 0) {
             B = A % 8;
             B = B ^ 7;
