@@ -5,10 +5,7 @@ import solutions.Solution;
 import solutions.Utils;
 import solutions.common.Point;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -20,7 +17,7 @@ public class Day21 implements Solution {
         System.out.println("Read codes required to open the door:");
         System.out.println(Utils.toStringLineByLine(requiredCodes));
 
-        //requiredCodes = requiredCodes.subList(requiredCodes.size() - 1, requiredCodes.size());
+        requiredCodes = requiredCodes.subList(requiredCodes.size() - 1, requiredCodes.size());
         List<ControllerInput> firstRobotInputs = requiredCodes.stream()
                                                                                  .map(code -> findRequiredKeypadSequences(
                                                                                          code.buttonSequence,
@@ -73,6 +70,69 @@ public class Day21 implements Solution {
         System.out.printf("Total complexity: %d", totalCodesComplexity);
 
 
+    }
+
+    private ControllerInput findRequiredKeypadSequencesCacheChunks(
+            List<ControllerKeyPadButton> buttonsToPress,
+            Point initialLocation,
+            Point gapLocation,
+            Map<String, List<ControllerKeyPadButton>> cache
+    ) {
+        // We need to optimize this as the lists are getting too unwieldy
+        // the idea is to operate on strings and only convert into the
+        // nice button representation on cache miss.
+        List<ControllerKeyPadButton> requiredSeq = new ArrayList<>();
+
+        int cacheChunkSize = 100;
+        Point currentLocation = initialLocation;
+        for (int i = 0; i < buttonsToPress.size(); i+=cacheChunkSize) {
+            List<ControllerKeyPadButton> currentChunk = buttonsToPress.subList(i, Math.min(i+cacheChunkSize, buttonsToPress.size()));
+            String representation = new ControllerInput(currentChunk).toString();
+
+            if (cache.containsKey(representation)) {
+                //System.out.println("Cache hit!");
+                requiredSeq.addAll(cache.get(representation));
+            } else {
+                List<ControllerKeyPadButton> subOutput = new ArrayList<>();
+                for (Button button : currentChunk) {
+                    Point translationVector = button.getLocationOnKeypad().difference(currentLocation);
+                    // If the gap on the keypad is on our usual path of
+                    // first going horizontally and then vertically,
+                    // we need to flip the order
+                    if (currentLocation.y() == gapLocation.y()
+                        && button.getLocationOnKeypad().x() == gapLocation.x()) {
+                        subOutput.addAll(handleVerticalDisplacement(translationVector));
+                        subOutput.addAll(handleHorizontalDisplacement(translationVector));
+                        subOutput.add(ControllerKeyPadButton.ACTION);
+                    } else if (currentLocation.x() == gapLocation.x()
+                               && button.getLocationOnKeypad().y() == gapLocation.y()) {
+                        subOutput.addAll(handleHorizontalDisplacement(translationVector));
+                        subOutput.addAll(handleVerticalDisplacement(translationVector));
+                        subOutput.add(ControllerKeyPadButton.ACTION);
+                    } else {
+                        // Here we need to pick the better approach. For now, we simply default to the
+                        // second one
+                        // if we are going left and then down it is faster to do the left way first
+                        // not sure why that is the case
+                        if (translationVector.x() < 0) {
+                            subOutput.addAll(handleHorizontalDisplacement(translationVector));
+                            subOutput.addAll(handleVerticalDisplacement(translationVector));
+                        } else {
+                            subOutput.addAll(handleVerticalDisplacement(translationVector));
+                            subOutput.addAll(handleHorizontalDisplacement(translationVector));
+                        }
+                        subOutput.add(ControllerKeyPadButton.ACTION);
+                    }
+
+
+                    currentLocation = button.getLocationOnKeypad();
+                }
+
+                cache.put(representation, subOutput);
+                requiredSeq.addAll(subOutput);
+            }
+        }
+        return new ControllerInput(requiredSeq);
     }
 
     private <T extends Button> ControllerInput findRequiredKeypadSequences(
@@ -165,12 +225,13 @@ public class Day21 implements Solution {
                                                               ))
                                                               .toList();
         List<ControllerInput> currentRobotInputs = firstRobotInputs;
+        Map<String, List<ControllerKeyPadButton>> cache = new HashMap<>();
         for (int i = 0; i < numberOfRobots-1; i++) {
             currentRobotInputs = currentRobotInputs.stream()
-                                                                      .map(code -> findRequiredKeypadSequences(
+                                                                      .map(code -> findRequiredKeypadSequencesCacheChunks(
                                                                               code.buttonSequence,
                                                                               ControllerKeyPadButton.ACTION.locationOnKeypad,
-                                                                              ControllerKeyPadButton.GAP.locationOnKeypad)).toList();
+                                                                              ControllerKeyPadButton.GAP.locationOnKeypad, cache)).toList();
 
             System.out.println("Processing required to enter into the robot number %d: ".formatted(i + 2));
             //System.out.println(Utils.toStringLineByLine(currentRobotInputs));
