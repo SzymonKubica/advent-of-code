@@ -14,6 +14,7 @@ import solutions.day19.Day19;
 import solutions.day2.Day2;
 import solutions.day20.Day20;
 import solutions.day21.Day21;
+import solutions.day22.Day22;
 import solutions.day3.Day3;
 import solutions.day4.Day4;
 import solutions.day5.Day5;
@@ -53,7 +54,8 @@ public class SolutionRunner {
                                            new Day18(),
                                            new Day19(),
                                            new Day20(),
-                                           new Day21());
+                                           new Day21(),
+                                           new Day22());
 
         int day_idx = day - 1;
         if (day_idx > solutions.size()) {
