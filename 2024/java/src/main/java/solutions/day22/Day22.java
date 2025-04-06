@@ -3,11 +3,12 @@ package solutions.day22;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
+import org.apache.commons.lang3.tuple.Pair;
 import solutions.Solution;
 import solutions.Utils;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Day22 implements Solution {
@@ -21,7 +22,11 @@ public class Day22 implements Solution {
         int progressLogIterationInterval = 100;
         for (int j = 0; j < secretNumbers.size(); j++) {
             SecretNumber number = secretNumbers.get(j);
-            System.out.println("Processing number: %s (%d/%d)".formatted(number.initialValue, j, secretNumbers.size()));
+            System.out.println("Processing number: %s (%d/%d)".formatted(
+                    number.initialValue,
+                    j,
+                    secretNumbers.size()
+            ));
             for (int i = 0; i < EVOLUTION_ITERATIONS; i++) {
                 number.evolve();
                 if (i % progressLogIterationInterval == 0) {
@@ -45,8 +50,81 @@ public class Day22 implements Solution {
 
     @Override
     public void secondPart(String inputFile) {
-        // We need to create a map from the sequence of changes to
+        // We need to create a map from the sequence of changes to the sell price and then pick
+        // the best one
+        List<SecretNumber> secretNumbers = readSecretNumbers(Utils.readInputAsStream(inputFile));
 
+        Map<ChangeSequence, Map<SecretNumber, Integer>> sellPriceByChangeSequence = new HashMap<>();
+
+        int progressLogIterationInterval = 100;
+        for (int j = 0; j < secretNumbers.size(); j++) {
+            SecretNumber number = secretNumbers.get(j);
+            System.out.println("Processing number: %s (%d/%d)".formatted(
+                    number.initialValue,
+                    j,
+                    secretNumbers.size()
+            ));
+            // First we populate the initial list of four changes
+            List<Integer> initialChanges = new ArrayList<>();
+            for (int i = 0; i < 4; i++) {
+                int price = number.getPrice();
+                number.evolve();
+                int newPrice = number.getPrice();
+                int change = newPrice - price;
+                //System.out.println("%d : %d (%d) (evolutios: %d)".formatted(number.getValue(), newPrice, change, number.getEvolutionCount()));
+                initialChanges.add(change);
+            }
+            ChangeSequence changeSequence = new ChangeSequence(initialChanges);
+            sellPriceByChangeSequence.putIfAbsent(changeSequence, new HashMap<>());
+            // First time we always put the number because it is the first time we are processing
+            // this number that corresponds to a single buyer
+            sellPriceByChangeSequence.get(changeSequence).put(number, number.getPrice());
+            for (int i = 0; i < EVOLUTION_ITERATIONS - 4; i++) {
+                int price = number.getPrice();
+                number.evolve();
+                int newPrice = number.getPrice();
+                int change = newPrice - price;
+                //System.out.println("%d : %d (%d) (evolutios: %d)".formatted(number.getValue(), newPrice, change, number.getEvolutionCount()));
+                changeSequence = changeSequence.update(change);
+                sellPriceByChangeSequence.putIfAbsent(changeSequence, new HashMap<>());
+                // Here we only put if the number is not already there in the map.
+                // The reason is that the monkey will sell immediately and then move to
+                // the next buyer so if a given change sequence occurs twice for a given buyer,
+                // we need to only use the first occurrence.
+                sellPriceByChangeSequence.get(changeSequence)
+                        .putIfAbsent(number, number.getPrice());
+
+                if (i % progressLogIterationInterval == 0) {
+                    System.out.println("Progress: (%d/%d)".formatted(i, EVOLUTION_ITERATIONS-4));
+                }
+            }
+        }
+
+        // Now we sum all prices from the sequences map to find the best one
+        Map<ChangeSequence, Integer> totalGainMap = sellPriceByChangeSequence.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().values().stream().reduce(Integer::sum).get()
+                ));
+
+        //System.out.println(totalGainMap);
+
+        List<Pair<ChangeSequence, Integer>> sortedTotalGainMap = totalGainMap.entrySet().stream()
+                .sorted(Comparator.comparingInt(Map.Entry::getValue))
+                .map(entry -> Pair.of(entry.getKey(), entry.getValue()))
+                .toList();
+
+        System.out.println(sortedTotalGainMap.getLast());
+        System.out.println(sellPriceByChangeSequence.get(sortedTotalGainMap.getLast().getLeft()));
+
+        System.out.println("The most bananas we can get is: %d".formatted(sortedTotalGainMap.getLast().getRight()));
+
+    }
+
+    private record ChangeSequence(List<Integer> changes) {
+        ChangeSequence update(int next) {
+            return new ChangeSequence(Stream.concat(changes.subList(1,4).stream(), Stream.of(next)).toList());
+        }
     }
 
     private List<SecretNumber> readSecretNumbers(Stream<String> input) {
@@ -58,10 +136,11 @@ public class Day22 implements Solution {
     private static class SecretNumber {
         final long initialValue;
         @Getter long value;
+        @Getter int evolutionCount;
 
         static SecretNumber fromString(String input) {
             long value = Long.parseLong(input);
-            return new SecretNumber(value, value);
+            return new SecretNumber(value, value, 0);
         }
 
         String showCurrentState() {
@@ -82,6 +161,11 @@ public class Day22 implements Solution {
             long toMix3 = value * 2048;
             this.mix(toMix3);
             this.prune();
+            evolutionCount++;
+        }
+
+        int getPrice() {
+            return (int) (value % 10);
         }
 
         private void prune() {
