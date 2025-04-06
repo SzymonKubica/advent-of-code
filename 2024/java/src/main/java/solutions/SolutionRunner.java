@@ -15,6 +15,8 @@ import solutions.day2.Day2;
 import solutions.day20.Day20;
 import solutions.day21.Day21;
 import solutions.day22.Day22;
+import solutions.day23.Day23;
+import solutions.day24.Day24;
 import solutions.day3.Day3;
 import solutions.day4.Day4;
 import solutions.day5.Day5;
@@ -55,14 +57,16 @@ public class SolutionRunner {
                                            new Day19(),
                                            new Day20(),
                                            new Day21(),
-                                           new Day22());
+                                           new Day22(),
+                                           new Day23(),
+                                           new Day24());
 
-        int day_idx = day - 1;
-        if (day_idx > solutions.size()) {
+        int dayIdx = day - 1;
+        if (dayIdx > solutions.size()) {
             throw new RuntimeException("Day %d not implemented".formatted(day));
         }
 
-        Solution solution = solutions.get(day_idx);
+        Solution solution = solutions.get(dayIdx);
 
         if (part == 1) {
             solution.firstPart(inputFile);
