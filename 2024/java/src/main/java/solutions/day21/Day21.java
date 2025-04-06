@@ -231,7 +231,67 @@ public class Day21 implements Solution {
         // sequence of moves,
         // we can represent it as a map from the key type to the number of times it needs to be
         // pressed.
+        int numberOfRobots = 26;
+
+        //requiredCodes = requiredCodes.subList(0,1);
+
+        Map<Pair<List<ControllerKeyPadButton>, Integer>, Long> cache = new HashMap<>();
+        Map<Code, Long> shortestSequenceLengths = new HashMap<>();
+        for (Code code : requiredCodes) {
+            // The first inputs need to be processed using the old version of the function to
+            // get us into the world of keypad sequences. From then onwards we are operating on
+            // cached sequences to speed up the process.
+            // We try to process only a single key
+            System.out.println("Processing key presses required by robot 2 to enter into the robot 1");
+            ControllerInput currentRobotInput = findRequiredKeypadSequences(
+                    code.buttonSequence,
+                    DoorKeypadButton.ACTION.locationOnKeypad,
+                    DoorKeypadButton.GAP.locationOnKeypad
+            );
+            System.out.println(currentRobotInput);
+
+
+            shortestSequenceLengths.put(code, findRequiredKeyPresses(currentRobotInput.buttonSequence, 1, numberOfRobots, cache));
+        }
+
+
+        long totalCodesComplexity = 0;
+        for (int i = 0; i < requiredCodes.size(); i++) {
+            Code code = requiredCodes.get(i);
+            long numericCodePart = Long.parseLong(code.toString().substring(
+                    0,
+                    code.toString().length() - 1
+            ));
+            long shortestSequenceLength = shortestSequenceLengths.get(code);
+            long complexity = numericCodePart * shortestSequenceLength;
+            System.out.printf(
+                    "Code complexity: %d * %d = %d%n",
+                    shortestSequenceLength,
+                    numericCodePart,
+                    complexity
+            );
+            totalCodesComplexity += complexity;
+        }
+
+        System.out.printf("Total complexity: %d", totalCodesComplexity);
+
+
+    }
+    public void secondPartWithMapCompaction(String inputFile) {
+        List<Code> requiredCodes = readInput(Utils.readInputAsStream(inputFile));
+
+        System.out.println("Read codes required to open the door:");
+        System.out.println(Utils.toStringLineByLine(requiredCodes));
+
+        // It seems like by going forward we can barely manage to process a chain of 23 robots.
+        // anything over that fails because of string builder capacity error.
+        // I suspect we must have many duplicates, so instead of representing the input as a
+        // sequence of moves,
+        // we can represent it as a map from the key type to the number of times it needs to be
+        // pressed.
         int numberOfRobots = 3;
+
+        //requiredCodes = requiredCodes.subList(0,1);
 
         List<Map<ControllerKeyPadButton, Long>> keysPerCode = new ArrayList<>();
         for (Code code : requiredCodes) {
@@ -239,13 +299,16 @@ public class Day21 implements Solution {
             // get us into the world of keypad sequences. From then onwards we are operating on
             // cached sequences to speed up the process.
             // We try to process only a single key
+            System.out.println("Processing key presses required by robot 2 to enter into the robot 1");
             ControllerInput currentRobotInput = findRequiredKeypadSequences(
                     code.buttonSequence,
                     DoorKeypadButton.ACTION.locationOnKeypad,
                     DoorKeypadButton.GAP.locationOnKeypad
             );
+            System.out.println(currentRobotInput);
 
             var countedUniqueKeyPresses = countUniqueKeyPresses(currentRobotInput);
+            System.out.println(countedUniqueKeyPresses);
 
             for (int i = 0; i < numberOfRobots - 1; i++) {
                 countedUniqueKeyPresses = findRequiredKeypadSequencesMapCompaction(
@@ -264,7 +327,7 @@ public class Day21 implements Solution {
         long totalCodesComplexity = 0;
         for (int i = 0; i < requiredCodes.size(); i++) {
             Code code = requiredCodes.get(i);
-            int numericCodePart = Integer.parseInt(code.toString().substring(
+            long numericCodePart = Long.parseLong(code.toString().substring(
                     0,
                     code.toString().length() - 1
             ));
@@ -282,6 +345,57 @@ public class Day21 implements Solution {
         System.out.printf("Total complexity: %d", totalCodesComplexity);
 
 
+    }
+
+    private static Long findRequiredKeyPresses(List<ControllerKeyPadButton> buttonsToPress, int level, int requiredLevels, Map<Pair<List<ControllerKeyPadButton>, Integer>, Long> cache) {
+        if (cache.containsKey(Pair.of(buttonsToPress, level))) {
+            return cache.get(Pair.of(buttonsToPress, level));
+        }
+        if (level == requiredLevels) {
+            return (long) buttonsToPress.size();
+        }
+
+        Point currentLocation = ControllerKeyPadButton.ACTION.locationOnKeypad;
+        Point gapLocation = ControllerKeyPadButton.GAP.locationOnKeypad;
+        List<List<ControllerKeyPadButton>> nextLevelInputs = new ArrayList<>();
+        for (ControllerKeyPadButton button : buttonsToPress) {
+            List<ControllerKeyPadButton> pressesForButton = new ArrayList<>();
+            Point translationVector = button.getLocationOnKeypad().difference(currentLocation);
+            // If the gap on the keypad is on our usual path of
+            // first going horizontally and then vertically,
+            // we need to flip the order
+            if (currentLocation.y() == gapLocation.y()
+                && button.getLocationOnKeypad().x() == gapLocation.x()) {
+                pressesForButton.addAll(handleVerticalDisplacement(translationVector));
+                pressesForButton.addAll(handleHorizontalDisplacement(translationVector));
+                pressesForButton.add(ControllerKeyPadButton.ACTION);
+            } else if (currentLocation.x() == gapLocation.x()
+                       && button.getLocationOnKeypad().y() == gapLocation.y()) {
+                pressesForButton.addAll(handleHorizontalDisplacement(translationVector));
+                pressesForButton.addAll(handleVerticalDisplacement(translationVector));
+                pressesForButton.add(ControllerKeyPadButton.ACTION);
+            } else {
+                // Here we need to pick the better approach. For now, we simply default
+                // to the
+                // second one
+                // if we are going left and then down it is faster to do the left way first
+                // not sure why that is the case
+                if (translationVector.x() < 0) {
+                    pressesForButton.addAll(handleHorizontalDisplacement(translationVector));
+                    pressesForButton.addAll(handleVerticalDisplacement(translationVector));
+                } else {
+                    pressesForButton.addAll(handleVerticalDisplacement(translationVector));
+                    pressesForButton.addAll(handleHorizontalDisplacement(translationVector));
+                }
+                pressesForButton.add(ControllerKeyPadButton.ACTION);
+            }
+            currentLocation = button.getLocationOnKeypad();
+            nextLevelInputs.add(pressesForButton);
+        }
+
+        long requiredLength =  nextLevelInputs.stream().map(input -> findRequiredKeyPresses(input, level+1, requiredLevels, cache)).reduce(Long::sum).get();
+        cache.put(Pair.of(buttonsToPress, level), requiredLength);
+        return requiredLength;
     }
 
     private static Map<ControllerKeyPadButton, Long> countUniqueKeyPresses(ControllerInput currentRobotInput) {
