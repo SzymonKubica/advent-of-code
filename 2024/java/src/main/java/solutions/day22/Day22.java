@@ -45,6 +45,7 @@ public class Day22 implements Solution {
 
     @Override
     public void secondPart(String inputFile) {
+        // We need to create a map from the sequence of changes to
 
     }
 

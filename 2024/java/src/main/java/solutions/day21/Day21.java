@@ -19,7 +19,6 @@ public class Day21 implements Solution {
         System.out.println("Read codes required to open the door:");
         System.out.println(Utils.toStringLineByLine(requiredCodes));
 
-        requiredCodes = requiredCodes.subList(requiredCodes.size() - 1, requiredCodes.size());
         List<ControllerInput> firstRobotInputs = requiredCodes.stream()
                 .map(code -> findRequiredKeypadSequences(
                         code.buttonSequence,
@@ -232,7 +231,7 @@ public class Day21 implements Solution {
         // sequence of moves,
         // we can represent it as a map from the key type to the number of times it needs to be
         // pressed.
-        int numberOfRobots = 26;
+        int numberOfRobots = 3;
 
         List<Map<ControllerKeyPadButton, Long>> keysPerCode = new ArrayList<>();
         for (Code code : requiredCodes) {
