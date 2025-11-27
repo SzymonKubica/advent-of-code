@@ -37,6 +37,7 @@ public class Day13 implements Solution {
                 .reduce(Long::sum)
                 .get();
 
+
         System.out.printf("Solutions found: %d%n", solutionsFound.get());
         System.out.printf("Minimum tokens required to win all possible prices: %d", totalCost);
     }

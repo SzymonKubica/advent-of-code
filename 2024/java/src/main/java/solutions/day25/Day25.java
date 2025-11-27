@@ -15,11 +15,12 @@ public class Day25 implements Solution {
     public void firstPart(String inputFile) {
         final List<LockPart> locksAndKeys = readInput(inputFile);
 
-        final List<LockPart> locks = locksAndKeys.stream().filter(Predicate.not(LockPart::isKey)).toList();
+        final List<LockPart> locks = locksAndKeys.stream().filter(Predicate.not(LockPart::isKey))
+                .toList();
         final List<LockPart> keys = locksAndKeys.stream().filter(LockPart::isKey).toList();
 
-        System.out.println("There are %d locks.".formatted(locks.size()));
-        System.out.println("There are %d keys.".formatted(keys.size()));
+        System.out.printf("There are %d locks.%n", locks.size());
+        System.out.printf("There are %d keys.%n", keys.size());
 
         System.out.println(locks);
         System.out.println(keys);
@@ -49,10 +50,13 @@ public class Day25 implements Solution {
     private record LockPart(List<Integer> heights, boolean isKey) {
         private static int LOCK_HEIGHT = 7;
         private static int LOCK_WIDTH = 5;
+
         static LockPart fromString(String input) {
             List<List<LockCrossSectionCell>> insideOfTheLock = parseLockInternals(input);
 
-            assert insideOfTheLock.size() == LOCK_HEIGHT && insideOfTheLock.get(0).size() == LOCK_WIDTH: "Lock dimensions need to match %sx%d".formatted(LOCK_WIDTH, LOCK_HEIGHT);
+            assert insideOfTheLock.size() == LOCK_HEIGHT
+                   && insideOfTheLock.get(0).size() == LOCK_WIDTH :
+                    "Lock dimensions need to match %sx%d".formatted(LOCK_WIDTH, LOCK_HEIGHT);
 
             boolean isKey = insideOfTheLock.get(0).get(0) == LockCrossSectionCell.EMPTY;
 
@@ -63,7 +67,8 @@ public class Day25 implements Solution {
                     for (int y = 0; y < insideOfTheLock.size(); y++) {
                         LockCrossSectionCell curr = insideOfTheLock.get(y).get(x);
                         if (curr == LockCrossSectionCell.LOCK_PART) {
-                            // The extra -1 is because we have the convention that the bottom of the key will be always full
+                            // The extra -1 is because we have the convention that the bottom of
+                            // the key will be always full
                             // so we start counting from 1.
                             heights.add(LOCK_HEIGHT - y - 1);
                             break;
@@ -73,10 +78,11 @@ public class Day25 implements Solution {
             } else {
                 // For locks, we need to iterate from the top
                 for (int x = 0; x < insideOfTheLock.get(0).size(); x++) {
-                    for (int y = insideOfTheLock.size()-1; y >= 0; y--) {
+                    for (int y = insideOfTheLock.size() - 1; y >= 0; y--) {
                         LockCrossSectionCell curr = insideOfTheLock.get(y).get(x);
                         if (curr == LockCrossSectionCell.LOCK_PART) {
-                            // The extra -1 is because we have the convention that the bottom of the key will be always full
+                            // The extra -1 is because we have the convention that the bottom of
+                            // the key will be always full
                             // so we start counting from 1.
                             heights.add(y);
                             break;
@@ -104,7 +110,11 @@ public class Day25 implements Solution {
 
             for (int i = 0; i < LOCK_WIDTH; i++) {
                 if (lock.heights.get(i) + key.heights.get(i) >= LOCK_HEIGHT - 1) {
-                    System.out.println("Overlap detected in %d column. %s %s".formatted(i+1, lock, key));
+                    System.out.println("Overlap detected in %d column. %s %s".formatted(
+                            i + 1,
+                            lock,
+                            key
+                    ));
                     return false;
                 }
             }
