@@ -171,8 +171,8 @@ fn assemble_command_and_args(cli: &Cli) -> Option<Vec<String>> {
 /// selected language.
 fn enrich_script_name_with_path(cli: &Cli, script: &str) -> PathBuf {
     let mut script_path = env::current_dir().unwrap();
-    script_path = script_path.join(PathBuf::from(&cli.year.to_string()));
     script_path = script_path.join(PathBuf::from(&cli.language));
+    script_path = script_path.join(PathBuf::from(&cli.year.to_string()));
     script_path = script_path.join(script);
     script_path
 }
