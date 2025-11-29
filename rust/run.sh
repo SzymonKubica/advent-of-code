@@ -1,6 +1,8 @@
-day=$1
-part=$2
-input=$3
+year=$1
+day=$2
+part=$3
+input=$4
 
-time $AOC_ROOT_DIR/2024/rust/target/release/rust-solutions $day $part $input
+time rust/target/release/rust-solutions $year $day $part $input
+
 
