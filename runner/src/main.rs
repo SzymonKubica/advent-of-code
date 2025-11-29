@@ -64,7 +64,9 @@ fn main() {
         .arg(command_and_args[0].clone())
         .arg(command_and_args[1].clone())
         .arg(command_and_args[2].clone())
-        .arg(command_and_args[3].clone());
+        .arg(command_and_args[3].clone())
+        .arg(command_and_args[4].clone())
+        ;
 
     if cli.build {
         let mut shell = Command::new("sh");
@@ -153,7 +155,7 @@ fn assemble_command_and_args(cli: &Cli) -> Option<Vec<String>> {
         input_file
     } else {
         &format!(
-            "{}/{}/input-files/day-{}-puzzle-input",
+            "{}/input-files/{}/day-{}-puzzle-input",
             env::current_dir().unwrap().to_str().unwrap(),
             cli.year,
             cli.day
@@ -161,6 +163,7 @@ fn assemble_command_and_args(cli: &Cli) -> Option<Vec<String>> {
     };
     Some(vec![
         command.to_string(),
+        cli.year.to_string(),
         cli.day.to_string(),
         cli.part.to_string(),
         input_file.to_string(),
@@ -172,7 +175,6 @@ fn assemble_command_and_args(cli: &Cli) -> Option<Vec<String>> {
 fn enrich_script_name_with_path(cli: &Cli, script: &str) -> PathBuf {
     let mut script_path = env::current_dir().unwrap();
     script_path = script_path.join(PathBuf::from(&cli.language));
-    script_path = script_path.join(PathBuf::from(&cli.year.to_string()));
     script_path = script_path.join(script);
     script_path
 }
