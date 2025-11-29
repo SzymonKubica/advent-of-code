@@ -10,7 +10,7 @@ def main():
     part = args[2]
     input_file = args[3]
 
-    solution_module = importlib.import_module(f"2024.day{day}")
+    solution_module = importlib.import_module(f"{year}.day{day}")
     solution_class = getattr(solution_module, f"Day{day}")
 
     solution: Solution = solution_class()
