@@ -1,4 +1,5 @@
 #include <iostream>
+#include "src/2022/day_1.hpp"
 
 int main(int argc, char *argv[]) {
   if (argc != 5) {

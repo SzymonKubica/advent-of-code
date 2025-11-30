@@ -2,9 +2,9 @@
 
 This repository contains my solutions for AoC for the past few years. The
 codebase is set up to allow for implementing solutions in different languages
-and then using a single executable in the root of this repo to execute them.
+and then using a single executable in the root of this repository to execute them.
 
-## Structure of the Codebase
+## Project Structure
 
 The structure of the project is as follows:
 ```
