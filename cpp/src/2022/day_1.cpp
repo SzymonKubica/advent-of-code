@@ -1,36 +1,19 @@
 #include "day_1.hpp"
-#include <fstream>
-#include <sstream>
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include "../utils.hpp"
 
 void Day1::first_part(std::string input_file)
 {
-        std::ifstream file(input_file);
-
-        if (!file.is_open()) {
-                throw std::runtime_error("Could not open file");
-        }
-        std::ostringstream ss;
-        ss << file.rdbuf();
-        std::string content = ss.str();
-        file.close();
-
-        std::cout << "Input file content:\n" << content << std::endl;
-
-        std::istringstream iss(content);
-        std::vector<std::string> lines;
-        std::string line;
+        std::vector<std::string> lines = get_lines_from_file(input_file);
 
         int max_calories = 0;
         int current_calories = 0;
 
-        while (std::getline(iss, line)) {
+        for (auto &line : lines) {
                 if (line.empty()) {
-                        if (current_calories > max_calories) {
-                                max_calories = current_calories;
-                        }
+                        max_calories = std::max(current_calories, max_calories);
                         current_calories = 0;
                 } else {
                         current_calories += std::stoi(line);
@@ -41,26 +24,12 @@ void Day1::first_part(std::string input_file)
 }
 void Day1::second_part(std::string input_file)
 {
-        std::ifstream file(input_file);
-
-        if (!file.is_open()) {
-                throw std::runtime_error("Could not open file");
-        }
-        std::ostringstream ss;
-        ss << file.rdbuf();
-        std::string content = ss.str();
-        file.close();
-
-        std::cout << "Input file content:\n" << content << std::endl;
-
-        std::istringstream iss(content);
-        std::vector<std::string> lines;
-        std::string line;
+        std::vector<std::string> lines = get_lines_from_file(input_file);
 
         int current_calories = 0;
         std::vector<int> all_calorie_counts;
 
-        while (std::getline(iss, line)) {
+        for (auto &line : lines) {
                 if (line.empty()) {
                         all_calorie_counts.push_back(current_calories);
                         std::cout << "Recorded elf with " << current_calories
