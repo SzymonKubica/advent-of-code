@@ -23,4 +23,5 @@
     )
   )
 
-(-main "2022" "1" "2" "../input-files/2022/day-1-puzzle-input")
+(comment
+  (-main "2022" "1" "2" "../input-files/2022/day-1-puzzle-input"))
