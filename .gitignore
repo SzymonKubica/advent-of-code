@@ -1,5 +1,9 @@
 account-ownership-code
 target/
 venv/
-python-solutions/inpt.txt
+CMakeFiles/
+advent-of-code
+.cache/
 *.pyc
+build/
+build-debug/
