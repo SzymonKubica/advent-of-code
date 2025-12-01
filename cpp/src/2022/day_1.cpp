@@ -4,7 +4,7 @@
 #include <algorithm>
 #include "../utils.hpp"
 
-void Day1::first_part(std::string input_file)
+void Year2022Day1::first_part(std::string input_file)
 {
         std::vector<std::string> lines = get_lines_from_file(input_file);
 
@@ -22,7 +22,7 @@ void Day1::first_part(std::string input_file)
 
         std::cout << "Max calories: " << max_calories << std::endl;
 }
-void Day1::second_part(std::string input_file)
+void Year2022Day1::second_part(std::string input_file)
 {
         std::vector<std::string> lines = get_lines_from_file(input_file);
 

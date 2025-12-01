@@ -1,6 +1,6 @@
 #include "../solution.hpp"
 
-class Year2022Day1 : public Solution
+class Year2025Day1 : public Solution
 {
       public:
         void first_part(std::string input_file) override;

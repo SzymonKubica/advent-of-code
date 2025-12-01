@@ -1,5 +1,9 @@
 #include <iostream>
+#include <unordered_map>
+#include <vector>
 #include "src/2022/day_1.hpp"
+#include "src/2025/day_1.hpp"
+#include "src/solution.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -19,11 +23,17 @@ int main(int argc, char *argv[])
                   << ", part: " << part << ", input file: " << input_file << "."
                   << std::endl;
 
-        // TODO: add proper year/day selection
+        std::unordered_map<int, std::vector<Solution *>> yearly_solutions;
+
+        yearly_solutions[2022] = std::vector<Solution *>{new Year2022Day1()};
+        yearly_solutions[2025] = std::vector<Solution *>{new Year2025Day1()};
+
+        auto solution = yearly_solutions[year][day - 1];
+
         if (part == 1) {
-                (new Day1())->first_part(input_file);
+                solution->first_part(input_file);
         } else {
-                (new Day1())->second_part(input_file);
+                solution->second_part(input_file);
         }
         return 0;
 }
