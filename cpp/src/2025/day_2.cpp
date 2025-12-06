@@ -28,7 +28,7 @@ Range range_from_str(std::string range_str)
 
 std::vector<Range> read_ranges(std::string input_file)
 {
-        std::vector<std::string> lines = get_lines_from_file(input_file);
+        std::vector<std::string> lines = read_lines_from_file(input_file);
         // The input is a single line in this puzzle
         std::string input = lines[0];
 

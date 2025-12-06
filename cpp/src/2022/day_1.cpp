@@ -6,7 +6,7 @@
 
 void Year2022Day1::first_part(std::string input_file)
 {
-        std::vector<std::string> lines = get_lines_from_file(input_file);
+        std::vector<std::string> lines = read_lines_from_file(input_file);
 
         int max_calories = 0;
         int current_calories = 0;
@@ -24,7 +24,7 @@ void Year2022Day1::first_part(std::string input_file)
 }
 void Year2022Day1::second_part(std::string input_file)
 {
-        std::vector<std::string> lines = get_lines_from_file(input_file);
+        std::vector<std::string> lines = read_lines_from_file(input_file);
 
         int current_calories = 0;
         std::vector<int> all_calorie_counts;

@@ -5,6 +5,7 @@
 #include "src/2025/day_1.hpp"
 #include "src/2025/day_2.hpp"
 #include "src/2025/day_3.hpp"
+#include "src/2025/day_4.hpp"
 #include "src/solution.hpp"
 
 int main(int argc, char *argv[])
@@ -28,7 +29,8 @@ int main(int argc, char *argv[])
         std::unordered_map<int, std::vector<Solution *>> yearly_solutions;
 
         yearly_solutions[2022] = std::vector<Solution *>{new Year2022Day1()};
-        yearly_solutions[2025] = std::vector<Solution *>{new Year2025Day1(), new Year2025Day2(), new Year2025Day3()};
+        yearly_solutions[2025] = std::vector<Solution *>{
+            new Year2025Day1(), new Year2025Day2(), new Year2025Day3(), new Year2025Day4()};
 
         auto solution = yearly_solutions[year][day - 1];
 

@@ -3,7 +3,7 @@
 #include <iostream>
 #include "./utils.hpp"
 
-std::vector<std::string> get_lines_from_file(std::string file_path)
+std::vector<std::string> read_lines_from_file(const std::string &file_path)
 {
 
         std::ifstream file(file_path);

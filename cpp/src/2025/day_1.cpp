@@ -23,7 +23,7 @@ struct Rotation {
 
 void Year2025Day1::first_part(std::string input_file)
 {
-        std::vector<std::string> lines = get_lines_from_file(input_file);
+        std::vector<std::string> lines = read_lines_from_file(input_file);
         const int dial_positions = 100;
 
         int pointing_at_zero_count = 0;
@@ -54,7 +54,7 @@ void Year2025Day1::first_part(std::string input_file)
 }
 void Year2025Day1::second_part(std::string input_file)
 {
-        std::vector<std::string> lines = get_lines_from_file(input_file);
+        std::vector<std::string> lines = read_lines_from_file(input_file);
         const int dial_positions = 100;
 
         int pointing_at_zero_count = 0;

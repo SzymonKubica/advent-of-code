@@ -8,7 +8,7 @@
 
 std::vector<std::vector<int>> read_battery_banks(std::string input_file)
 {
-        std::vector<std::string> lines = get_lines_from_file(input_file);
+        std::vector<std::string> lines = read_lines_from_file(input_file);
 
         std::vector<std::vector<int>> battery_banks;
         for (auto &line : lines) {
