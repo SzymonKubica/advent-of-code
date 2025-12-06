@@ -78,4 +78,10 @@ void Year2025Day5::first_part(std::string input_file)
                   << std::endl;
 }
 
-void Year2025Day5::second_part(std::string input_file) {}
+void Year2025Day5::second_part(std::string input_file) {
+  // sort the ranges by their start id
+  // iterate over sorted list
+  // if two ranges overlap replace them with one
+  // continue until stability reached
+  // add up 'lengths' of all remaining, disjoint arrays
+}
