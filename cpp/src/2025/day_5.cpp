@@ -2,24 +2,25 @@
 #include <string>
 #include <vector>
 #include <ostream>
+#include <cstdint>
 #include "../utils.hpp"
 
 struct FreshnessRange {
         /**
          * Start of the range of fresh IDs (inclusive).
          */
-        long start;
+        uint64_t start;
         /**
          * End of the range of fresh IDs (inclusive).
          */
-        long end;
+        uint64_t end;
 
       public:
         static FreshnessRange from_string(std::string representation)
         {
                 int hypen_idx = representation.find('-');
-                return {std::stol(representation.substr(0, hypen_idx)),
-                        std::stol(representation.substr(
+                return {std::stoull(representation.substr(0, hypen_idx)),
+                        std::stoull(representation.substr(
                             hypen_idx + 1, representation.size()))};
         }
 };
@@ -29,13 +30,13 @@ std::ostream &operator<<(std::ostream &os, const FreshnessRange &range)
         return os << "[" << range.start << ", " << range.end << "]";
 }
 
-std::pair<std::vector<FreshnessRange>, std::vector<long>>
+std::pair<std::vector<FreshnessRange>, std::vector<uint64_t>>
 read_freshness_ranges_and_ingredient_ids(std::string input_file)
 {
         std::vector<std::string> lines = read_lines_from_file(input_file);
 
         std::vector<FreshnessRange> ranges;
-        std::vector<long> ingredient_ids;
+        std::vector<uint64_t> ingredient_ids;
 
         int curr = 0;
         while (true) {
@@ -51,7 +52,7 @@ read_freshness_ranges_and_ingredient_ids(std::string input_file)
 
         while (curr < lines.size()) {
                 std::string current_line = lines[curr];
-                ingredient_ids.push_back(std::stol(current_line));
+                ingredient_ids.push_back(std::stoull(current_line));
                 curr++;
         }
 
@@ -64,7 +65,7 @@ void Year2025Day5::first_part(std::string input_file)
             read_freshness_ranges_and_ingredient_ids(input_file);
 
         int fresh_ingredients = 0;
-        for (long id : ingredient_ids) {
+        for (uint64_t id : ingredient_ids) {
                 for (auto &range : ranges) {
                         std::cout << "Checking range: " << range << std::endl;
                         if (range.start <= id && id <= range.end) {
