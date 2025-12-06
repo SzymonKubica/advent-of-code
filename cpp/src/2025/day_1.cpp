@@ -4,8 +4,6 @@
 #include <algorithm>
 #include "../utils.hpp"
 
-enum class Direction { Left, Right };
-
 struct Rotation {
         int distance;
         Direction direction;

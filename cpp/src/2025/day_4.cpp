@@ -5,7 +5,7 @@
 #include <optional>
 #include "../utils.hpp"
 
-enum class GridCell { Empty = 0, PaperRoll = 1, ReachablePaperRoll = 2; };
+enum class GridCell { Empty = 0, PaperRoll = 1, ReachablePaperRoll = 2 };
 
 std::ostream &operator<<(std::ostream &os, const GridCell &r)
 {
@@ -50,7 +50,36 @@ Grid<GridCell> read_grid_from_file(std::string input_file)
 void Year2025Day4::first_part(std::string input_file)
 {
         auto grid = read_grid_from_file(input_file);
+        auto grid_copy = read_grid_from_file(input_file);
         std::cout << grid << std::endl;
+
+        int accessible_paper_rolls = 0;
+        for (const auto &row : grid.get_grid_of_points()) {
+                for (const auto &cell : row) {
+                        if (grid.index_grid(cell.location) == GridCell::Empty) {
+                                continue;
+                        }
+                        std::vector<GridPoint<GridCell>> neighbours =
+                            grid.get_neighbours(cell);
+
+                        int paper_rolls_surrounding = 0;
+                        for (auto &nb : neighbours) {
+                                if (nb.value == GridCell::PaperRoll) {
+                                        paper_rolls_surrounding++;
+                                }
+                        }
+                        if (paper_rolls_surrounding < 4) {
+                                accessible_paper_rolls++;
+                                grid_copy
+                                    .cells[cell.location.y][cell.location.x] =
+                                    GridCell::ReachablePaperRoll;
+                        }
+                }
+        }
+
+        std::cout << "The forkflift can access " << accessible_paper_rolls
+                  << " paper rolls." << std::endl;
+        std::cout << grid_copy << std::endl;
 }
 
 void Year2025Day4::second_part(std::string input_file) {}

@@ -53,6 +53,8 @@ Point Point::translate(Direction direction, int distance) const
                 return {.x = this->x - distance, .y = this->y};
         case Direction::Right:
                 return {.x = this->x + distance, .y = this->y};
+        default:
+                throw std::invalid_argument("Invalid direction.");
         }
 }
 Point Point::translate(const Point &translation_vector) const

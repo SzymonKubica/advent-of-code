@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <optional>
 #include <iostream>
 
 std::vector<std::string> read_lines_from_file(const std::string &file_path);
@@ -42,8 +43,41 @@ template <typename T> struct Grid {
         std::vector<std::vector<T>> cells;
 
       public:
-        std::vector<GridPoint<T>> get_neighbours(const GridPoint<T> &location)
+        std::vector<GridPoint<T>>
+        get_neighbours(const GridPoint<T> &location) const
         {
+                std::vector<GridPoint<T>> neighbours;
+                for (auto nb_point : location.location.get_neighbours()) {
+                        if (this->is_within_bounds(nb_point)) {
+                                neighbours.emplace_back(
+                                    nb_point,
+                                    this->index_grid(nb_point).value());
+                        }
+                }
+                return neighbours;
+        }
+
+        std::optional<T> index_grid(const Point &location) const
+        {
+                if (!this->is_within_bounds(location)) {
+                        return std::nullopt;
+                }
+                return cells[location.y][location.x];
+        }
+
+        std::vector<std::vector<GridPoint<T>>> get_grid_of_points() const
+        {
+                std::vector<std::vector<GridPoint<T>>> grid;
+                for (int y = 0; y < this->cells.size(); y++) {
+                        std::vector<GridPoint<T>> row;
+                        // We assume the grid is well-formed i.e rectangular
+                        for (int x = 0; x < this->cells[0].size(); x++) {
+                                Point p = {x, y};
+                                row.push_back({p, this->cells[y][x]});
+                        }
+                        grid.push_back(row);
+                }
+                return grid;
         }
 
         /**
@@ -52,10 +86,10 @@ template <typename T> struct Grid {
          * length. Because of this we check the x coordinate against the size of
          * the first row.
          */
-        bool is_within_bounds(const Point &point)
+        bool is_within_bounds(const Point &point) const
         {
-                return 0 <= point.y && point.y <= this->cells.size() &&
-                       0 <= point.x && point.x <= this->cells[0].size();
+                return 0 <= point.y && point.y < this->cells.size() &&
+                       0 <= point.x && point.x < this->cells[0].size();
         }
 };
 
