@@ -4,7 +4,6 @@
 #include <vector>
 #include <cmath>
 #include "../utils.hpp"
-#include <boost/multiprecision/cpp_int.hpp>
 
 std::vector<std::vector<int>> read_battery_banks(std::string input_file)
 {
