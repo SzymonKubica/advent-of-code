@@ -50,40 +50,37 @@ int find_max_joltage(const std::vector<int> &battery_bank)
         return max_prefix_digit * 10 + second_largest_digit;
 }
 
-long find_max_joltage(const std::vector<int> &battery_bank,
-                      int num_chosen_batteries)
+long find_max_joltage(const std::vector<int> &battery_bank, int batteries_count)
 {
-        int chosen_batteries[num_chosen_batteries];
+        int chosen_batteries[batteries_count];
 
-        for (int i = 0; i < num_chosen_batteries; i++) {
+        for (int i = 0; i < batteries_count; i++) {
                 chosen_batteries[i] = 0;
         }
 
-        int last_chosen_index = 0;
-        int max_prefix_digit = battery_bank[0];
-        for (int i = 0; i < num_chosen_batteries; i++) {
-                for (int j = last_chosen_index + 1;
-                     j < battery_bank.size() - (num_chosen_batteries - 1) + i;
-                     j++) {
+        int last_chosen_idx = 0;
+        int curr_max_digit = battery_bank[0];
+        for (int i = 0; i < batteries_count; i++) {
+                for (int j = last_chosen_idx + 1;
+                     j < battery_bank.size() - (batteries_count - 1) + i; j++) {
                         int current = battery_bank[j];
                         // Only update if actually larger as we want to stop at
                         // the first occurrence.
-                        if (current > max_prefix_digit) {
-                                max_prefix_digit = current;
-                                last_chosen_index = j;
+                        if (current > curr_max_digit) {
+                                curr_max_digit = current;
+                                last_chosen_idx = j;
                         }
                 }
-                chosen_batteries[i] = max_prefix_digit;
-                last_chosen_index++;
-                if (last_chosen_index < battery_bank.size()) {
-                        max_prefix_digit = battery_bank[last_chosen_index];
+                chosen_batteries[i] = curr_max_digit;
+                last_chosen_idx++;
+                if (last_chosen_idx < battery_bank.size()) {
+                        curr_max_digit = battery_bank[last_chosen_idx];
                 }
         }
 
         long total = 0;
-
-        for (int i = 0; i < num_chosen_batteries; i++) {
-                total += ((long)std::pow(10, num_chosen_batteries - i - 1)) *
+        for (int i = 0; i < batteries_count; i++) {
+                total += ((long)std::pow(10, batteries_count - i - 1)) *
                          chosen_batteries[i];
         }
         return total;
@@ -96,7 +93,6 @@ void Year2025Day3::first_part(std::string input_file)
         int total_joltage;
         for (auto &bank : battery_banks) {
                 total_joltage += find_max_joltage(bank);
-                std::cout << "Total joltage: " << total_joltage << std::endl;
         }
         std::cout << "Total joltage: " << total_joltage << std::endl;
 }
