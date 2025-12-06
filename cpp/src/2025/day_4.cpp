@@ -5,7 +5,7 @@
 #include <optional>
 #include "../utils.hpp"
 
-enum class GridCell { Empty = 0, PaperRoll = 1 };
+enum class GridCell { Empty = 0, PaperRoll = 1, ReachablePaperRoll = 2; };
 
 std::ostream &operator<<(std::ostream &os, const GridCell &r)
 {
@@ -14,6 +14,8 @@ std::ostream &operator<<(std::ostream &os, const GridCell &r)
                 return os << '.';
         case GridCell::PaperRoll:
                 return os << '@';
+        case GridCell::ReachablePaperRoll:
+                return os << 'x';
         }
         return os;
 }

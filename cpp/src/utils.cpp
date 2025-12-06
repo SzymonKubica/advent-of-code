@@ -3,6 +3,16 @@
 #include <iostream>
 #include "./utils.hpp"
 
+const Point ORIGIN = {0, 0};
+const Point NORTH = ORIGIN.translate(Direction::Up);
+const Point SOUTH = ORIGIN.translate(Direction::Down);
+const Point EAST = ORIGIN.translate(Direction::Right);
+const Point WEST = ORIGIN.translate(Direction::Left);
+const Point NORTH_EAST = NORTH.translate(Direction::Left);
+const Point NORTH_WEST = NORTH.translate(Direction::Right);
+const Point SOUTH_EAST = SOUTH.translate(Direction::Left);
+const Point SOUTH_WEST = SOUTH.translate(Direction::Right);
+
 std::vector<std::string> read_lines_from_file(const std::string &file_path)
 {
 
@@ -26,4 +36,56 @@ std::vector<std::string> read_lines_from_file(const std::string &file_path)
         }
 
         return lines;
+}
+
+Point Point::translate(Direction direction) const
+{
+        return this->translate(direction, 1);
+}
+Point Point::translate(Direction direction, int distance) const
+{
+        switch (direction) {
+        case Direction::Up:
+                return {.x = this->x, .y = this->y - distance};
+        case Direction::Down:
+                return {.x = this->x, .y = this->y + distance};
+        case Direction::Left:
+                return {.x = this->x - distance, .y = this->y};
+        case Direction::Right:
+                return {.x = this->x + distance, .y = this->y};
+        }
+}
+Point Point::translate(const Point &translation_vector) const
+{
+        return this->translate(translation_vector, 1);
+}
+Point Point::translate(const Point &translation_vector, int repeat) const
+{
+
+        return {.x = this->x + repeat * translation_vector.x,
+                .y = this->y + repeat * translation_vector.y};
+}
+std::vector<Point> Point::get_neighbours() const
+{
+        std::vector<Point> neighbours;
+
+        for (auto adjacent : this->get_adjacent()) {
+                neighbours.push_back(adjacent);
+        }
+
+        neighbours.push_back(this->translate(NORTH_EAST));
+        neighbours.push_back(this->translate(NORTH_WEST));
+        neighbours.push_back(this->translate(SOUTH_EAST));
+        neighbours.push_back(this->translate(SOUTH_WEST));
+
+        return neighbours;
+}
+std::vector<Point> Point::get_adjacent() const
+{
+        return {
+            this->translate(Direction::Up),
+            this->translate(Direction::Down),
+            this->translate(Direction::Left),
+            this->translate(Direction::Right),
+        };
 }
