@@ -50,8 +50,8 @@ int find_max_joltage(const std::vector<int> &battery_bank)
         return max_prefix_digit * 10 + second_largest_digit;
 }
 
-long long find_max_joltage(const std::vector<int> &battery_bank,
-                           int num_chosen_batteries)
+long find_max_joltage(const std::vector<int> &battery_bank,
+                      int num_chosen_batteries)
 {
         int chosen_batteries[num_chosen_batteries];
 
@@ -66,7 +66,8 @@ long long find_max_joltage(const std::vector<int> &battery_bank,
                      j < battery_bank.size() - (num_chosen_batteries - 1) + i;
                      j++) {
                         int current = battery_bank[j];
-                        // Only update if actually larger
+                        // Only update if actually larger as we want to stop at
+                        // the first occurrence.
                         if (current > max_prefix_digit) {
                                 max_prefix_digit = current;
                                 last_chosen_index = j;
@@ -82,11 +83,7 @@ long long find_max_joltage(const std::vector<int> &battery_bank,
         long total = 0;
 
         for (int i = 0; i < num_chosen_batteries; i++) {
-                std::cout << "Chosen battery: " << chosen_batteries[i]
-                          << std::endl;
-                total += ((long)boost::multiprecision::pow(
-                             (boost::multiprecision::cpp_int)10,
-                             (long)num_chosen_batteries - (long)i - 1)) *
+                total += ((long)std::pow(10, num_chosen_batteries - i - 1)) *
                          chosen_batteries[i];
         }
         return total;
@@ -99,6 +96,7 @@ void Year2025Day3::first_part(std::string input_file)
         int total_joltage;
         for (auto &bank : battery_banks) {
                 total_joltage += find_max_joltage(bank);
+                std::cout << "Total joltage: " << total_joltage << std::endl;
         }
         std::cout << "Total joltage: " << total_joltage << std::endl;
 }
@@ -107,20 +105,11 @@ void Year2025Day3::second_part(std::string input_file)
 {
         auto battery_banks = read_battery_banks(input_file);
 
-        std::cout << "sizeof(long) = " << sizeof(long) << "\n";
-        long long total_joltage;
+        long total_joltage = 0;
         for (auto &bank : battery_banks) {
-                long long max_joltage = find_max_joltage(bank, 12);
+                long max_joltage = find_max_joltage(bank, 12);
                 std::cout << "Max bank joltage: " << max_joltage << std::endl;
-                total_joltage += (long long) max_joltage;
+                total_joltage += max_joltage;
         }
         std::cout << "Total joltage: " << total_joltage << std::endl;
-
-        long long a = 987654321111LL;
-        long long b = 811111111119LL;
-        long long c = 434234234278LL;
-        long long d = 888911112111LL;
-
-        long long sum = a + b + c + d;
-        std::cout << sum << "\n";
 }
