@@ -22,6 +22,7 @@ struct Point {
         Point translate(const Point &translation_vector, int repeat) const;
         std::vector<Point> get_neighbours() const;
         std::vector<Point> get_adjacent() const;
+        bool operator<(const Point &other) const;
 };
 
 extern const Point ORIGIN;

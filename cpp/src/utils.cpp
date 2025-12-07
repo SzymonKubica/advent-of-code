@@ -91,3 +91,13 @@ std::vector<Point> Point::get_adjacent() const
             this->translate(Direction::Right),
         };
 }
+
+/**
+ * We need to implement this comparator so that maps from points work correctly.
+ */
+bool Point::operator<(const Point &other) const
+{
+        if (x != other.x)
+                return x < other.x;
+        return y < other.y;
+}
