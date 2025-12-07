@@ -124,14 +124,14 @@ void Year2025Day7::second_part(std::string input_file)
         // by the ray to correctly calculate the total possible paths. This is
         // because if there are n ways of getting into a splitter, then the
         // number alternative paths that go out of the splitter is 2*n.
-        std::map<Point, uint64_t> ray_location_multiplicities;
+        std::map<Point, uint64_t> incoming_rays;
 
         //  For the first row we replace the starting point with a ray and start
         //  processing from the second row
         for (auto &cell : grid_with_coordinates[0]) {
                 if (cell.value == TachyonGridCell::Start) {
                         grid.set(cell.location, TachyonGridCell::Ray);
-                        ray_location_multiplicities[cell.location] = 1;
+                        incoming_rays[cell.location] = 1;
                 }
         }
 
@@ -140,74 +140,39 @@ void Year2025Day7::second_part(std::string input_file)
         for (auto row_it = std::next(grid_with_coordinates.begin());
              row_it != grid_with_coordinates.end(); ++row_it) {
                 for (auto &cell : *row_it) {
-                        auto location_above =
-                            cell.location.translate(Direction::Up);
+                        auto &loc = cell.location;
+                        auto location_above = loc.translate(Direction::Up);
                         auto cell_above = grid.index(location_above).value();
 
-                        uint64_t ways_to_reach_above =
-                            ray_location_multiplicities[location_above];
+                        uint64_t rays_incident_above =
+                            incoming_rays[location_above];
 
-                        if (cell_above == TachyonGridCell::Ray) {
-                                if (cell.value == TachyonGridCell::Splitter) {
-                                        total_splits++;
-                                        auto left = cell.location.translate(
-                                            Direction::Left);
-                                        auto right = cell.location.translate(
-                                            Direction::Right);
-                                        grid.set(left, TachyonGridCell::Ray);
-                                        grid.set(right, TachyonGridCell::Ray);
+                        // We only need to do interesting work if there is a ray
+                        // incident from the above onto our current cell.
+                        if (cell_above != TachyonGridCell::Ray) {
+                                continue;
+                        }
+                        if (cell.value == TachyonGridCell::Splitter) {
+                                total_splits++;
+                                auto left = loc.translate(Direction::Left);
+                                auto right = loc.translate(Direction::Right);
+                                grid.set(left, TachyonGridCell::Ray);
+                                grid.set(right, TachyonGridCell::Ray);
 
-                                        if (ray_location_multiplicities
-                                                .contains(left)) {
-                                                ray_location_multiplicities
-                                                    [left] =
-                                                        ray_location_multiplicities
-                                                            [left] +
-                                                        ways_to_reach_above;
-                                        } else {
-                                                ray_location_multiplicities
-                                                    [left] =
-                                                        ways_to_reach_above;
-                                        }
+                                incoming_rays[left] += rays_incident_above;
+                                incoming_rays[right] += rays_incident_above;
+                                // Only a splitter increases the number of
+                                // possible paths.
+                                possible_paths += rays_incident_above;
 
-                                        if (ray_location_multiplicities
-                                                .contains(right)) {
-                                                ray_location_multiplicities
-                                                    [right] =
-                                                        ray_location_multiplicities
-                                                            [right] +
-                                                        ways_to_reach_above;
-                                        } else {
-                                                ray_location_multiplicities
-                                                    [right] =
-                                                        ways_to_reach_above;
-                                        }
-
-                                        possible_paths += ways_to_reach_above;
-
-                                } else if (cell.value ==
-                                           TachyonGridCell::Empty) {
-                                        grid.set(cell.location,
-                                                 TachyonGridCell::Ray);
-                                        if (ray_location_multiplicities
-                                                .contains(cell.location)) {
-                                                ray_location_multiplicities
-                                                    [cell.location] +=
-                                                    ways_to_reach_above;
-                                        } else {
-                                                ray_location_multiplicities
-                                                    [cell.location] =
-                                                        ways_to_reach_above;
-                                        }
-                                }
+                        } else if (cell.value == TachyonGridCell::Empty) {
+                                grid.set(cell.location, TachyonGridCell::Ray);
+                                incoming_rays[loc] += rays_incident_above;
                         }
                 }
-                std::cout << grid << std::endl;
-                std::cout << std::endl;
-                std::cout << "There are a total of " << possible_paths
-                          << " possible paths." << std::endl;
         }
-
-        std::cout << "The ray is split a total of " << total_splits << " times."
-                  << std::endl;
+        std::cout << grid << std::endl;
+        std::cout << std::endl;
+        std::cout << "There are a total of " << possible_paths
+                  << " possible paths." << std::endl;
 }
