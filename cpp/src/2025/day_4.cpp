@@ -59,7 +59,7 @@ void Year2025Day4::first_part(std::string input_file)
         int accessible_paper_rolls = 0;
         for (const auto &row : grid.get_grid_of_points()) {
                 for (const auto &cell : row) {
-                        if (grid.index_grid(cell.location) == GridCell::Empty) {
+                        if (grid.index(cell.location) == GridCell::Empty) {
                                 continue;
                         }
                         std::vector<GridPoint<GridCell>> neighbours =
@@ -97,7 +97,7 @@ void Year2025Day4::second_part(std::string input_file)
                 for (const auto &row : grid.get_grid_of_points()) {
                         for (const auto &cell : row) {
                                 auto curr_value =
-                                    grid.index_grid(cell.location);
+                                    grid.index(cell.location);
                                 if (curr_value == GridCell::Empty ||
                                     curr_value ==
                                         GridCell::ReachablePaperRoll) {

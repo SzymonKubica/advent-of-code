@@ -50,19 +50,27 @@ template <typename T> struct Grid {
                 for (auto nb_point : location.location.get_neighbours()) {
                         if (this->is_within_bounds(nb_point)) {
                                 neighbours.emplace_back(
-                                    nb_point,
-                                    this->index_grid(nb_point).value());
+                                    nb_point, this->index(nb_point).value());
                         }
                 }
                 return neighbours;
         }
 
-        std::optional<T> index_grid(const Point &location) const
+        std::optional<T> index(const Point &location) const
         {
                 if (!this->is_within_bounds(location)) {
                         return std::nullopt;
                 }
                 return cells[location.y][location.x];
+        }
+
+        void set(const Point &location, T value)
+        {
+                if (!this->is_within_bounds(location)) {
+                        throw std::invalid_argument(
+                            "Tried to set a grid value that is out of bounds.");
+                }
+                cells[location.y][location.x] = value;
         }
 
         std::vector<std::vector<GridPoint<T>>> get_grid_of_points() const
