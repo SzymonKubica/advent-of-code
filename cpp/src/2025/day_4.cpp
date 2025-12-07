@@ -20,6 +20,8 @@ std::ostream &operator<<(std::ostream &os, const GridCell &r)
         return os;
 }
 
+namespace GridCellUtil
+{
 std::optional<GridCell> from_char(char c)
 {
         switch (c) {
@@ -31,6 +33,7 @@ std::optional<GridCell> from_char(char c)
                 return std::nullopt;
         }
 }
+} // namespace GridCellUtil
 
 Grid<GridCell> read_grid_from_file(std::string input_file)
 {
@@ -40,7 +43,7 @@ Grid<GridCell> read_grid_from_file(std::string input_file)
         for (auto &line : lines) {
                 std::vector<GridCell> row;
                 for (int i = 0; i < line.size(); i++) {
-                        row.push_back(from_char(line.at(i)).value());
+                        row.push_back(GridCellUtil::from_char(line.at(i)).value());
                 }
                 cells.push_back(row);
         }

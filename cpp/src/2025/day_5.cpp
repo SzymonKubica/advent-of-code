@@ -45,9 +45,9 @@ struct FreshnessRangeEndpoint {
       public:
         bool operator<(const FreshnessRangeEndpoint &other)
         {
-          // If we have a range of length 1 where the start is equal to the
-          // end we need to ensure that we first open and then close, otherwise
-          // this can break the endpoints balance.
+                // If we have a range of length 1 where the start is equal to
+                // the end we need to ensure that we first open and then close,
+                // otherwise this can break the endpoints balance.
                 if (id_position == other.id_position) {
                         return type == RangeEndpointType::Start &&
                                other.type == RangeEndpointType::End;
