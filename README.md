@@ -27,7 +27,7 @@ The structure of the project is as follows:
     └── rust
 
 ```
-We store all puzzle input files int the `input-files` directory. Solution
+We store all puzzle input files in the `input-files` directory. Solution
 impelementations in different languages should source the input files from
 there.
 
