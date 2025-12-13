@@ -1,5 +1,7 @@
+#include <cstdint>
 #include <sstream>
 #include <fstream>
+#include <cmath>
 #include <iostream>
 #include "./utils.hpp"
 
@@ -100,4 +102,28 @@ bool Point::operator<(const Point &other) const
         if (x != other.x)
                 return x < other.x;
         return y < other.y;
+}
+
+Point3d Point3d::operator+(const Point3d &other) const
+{
+        return {.x = x + other.x, .y = y + other.y, .z = z + other.z};
+}
+Point3d Point3d::operator-(const Point3d &other) const
+{
+        return {.x = x - other.x, .y = y - other.y, .z = z - other.z};
+}
+Point3d Point3d::operator*(int64_t scalar) const
+{
+        return {scalar * x, scalar * y, scalar * z};
+}
+
+double Point3d::magnitude() const
+{
+        return std::sqrt((double)x * x + (double)y * y + (double)z * z);
+}
+
+std::ostream &operator<<(std::ostream &os, const Point3d &point)
+{
+        return os << "{x: " << point.x << ", y: " << point.y
+                  << ", z: " << point.z << "}";
 }

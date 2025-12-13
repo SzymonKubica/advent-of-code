@@ -25,6 +25,18 @@ struct Point {
         bool operator<(const Point &other) const;
 };
 
+struct Point3d {
+        int64_t x;
+        int64_t y;
+        int64_t z;
+
+      public:
+        Point3d operator+(const Point3d &other) const;
+        Point3d operator-(const Point3d &other) const;
+        Point3d operator*(int64_t scalar) const;
+        double magnitude() const;
+};
+
 extern const Point ORIGIN;
 extern const Point NORTH;
 extern const Point SOUTH;
@@ -113,3 +125,5 @@ std::ostream &operator<<(std::ostream &os, const Grid<T> &grid)
         }
         return os;
 }
+
+std::ostream &operator<<(std::ostream &os, const Point3d &point);
