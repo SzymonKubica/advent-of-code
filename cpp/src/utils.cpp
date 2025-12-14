@@ -44,7 +44,7 @@ Point Point::translate(Direction direction) const
 {
         return this->translate(direction, 1);
 }
-Point Point::translate(Direction direction, int distance) const
+Point Point::translate(Direction direction, int64_t distance) const
 {
         switch (direction) {
         case Direction::Up:
@@ -63,7 +63,7 @@ Point Point::translate(const Point &translation_vector) const
 {
         return this->translate(translation_vector, 1);
 }
-Point Point::translate(const Point &translation_vector, int repeat) const
+Point Point::translate(const Point &translation_vector, int64_t repeat) const
 {
 
         return {.x = this->x + repeat * translation_vector.x,
@@ -104,6 +104,14 @@ bool Point::operator<(const Point &other) const
         return y < other.y;
 }
 
+Point Point::operator+(const Point &other) const {
+        return {.x = x + other.x, .y = y + other.y};
+}
+Point Point::operator-(const Point &other) const {
+        return {.x = x - other.x, .y = y - other.y};
+}
+Point Point::modulus() const { return {std::abs(x), std::abs(y)}; }
+
 Point3d Point3d::operator+(const Point3d &other) const
 {
         return {.x = x + other.x, .y = y + other.y, .z = z + other.z};
@@ -126,4 +134,9 @@ std::ostream &operator<<(std::ostream &os, const Point3d &point)
 {
         return os << "{x: " << point.x << ", y: " << point.y
                   << ", z: " << point.z << "}";
+}
+
+std::ostream &operator<<(std::ostream &os, const Point &point)
+{
+        return os << "{x: " << point.x << ", y: " << point.y << "}";
 }

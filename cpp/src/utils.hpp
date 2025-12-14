@@ -12,17 +12,20 @@ enum class Direction : uint8_t { Up, Down, Left, Right };
  * Represents a point on a grid.
  */
 struct Point {
-        int x;
-        int y;
+        int64_t x;
+        int64_t y;
 
       public:
         Point translate(Direction direction) const;
-        Point translate(Direction direction, int distance) const;
+        Point translate(Direction direction, int64_t distance) const;
         Point translate(const Point &translation_vector) const;
-        Point translate(const Point &translation_vector, int repeat) const;
+        Point translate(const Point &translation_vector, int64_t repeat) const;
         std::vector<Point> get_neighbours() const;
         std::vector<Point> get_adjacent() const;
         bool operator<(const Point &other) const;
+        Point operator+(const Point &other) const;
+        Point operator-(const Point &other) const;
+        Point modulus() const;
 };
 
 struct Point3d {
@@ -127,3 +130,4 @@ std::ostream &operator<<(std::ostream &os, const Grid<T> &grid)
 }
 
 std::ostream &operator<<(std::ostream &os, const Point3d &point);
+std::ostream &operator<<(std::ostream &os, const Point &point);

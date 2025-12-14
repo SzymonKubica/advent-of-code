@@ -10,6 +10,8 @@
 #include "src/2025/day_6.hpp"
 #include "src/2025/day_7.hpp"
 #include "src/2025/day_8.hpp"
+#include "src/2025/day_9.hpp"
+#include "src/2025/day_10.hpp"
 #include "src/solution.hpp"
 
 int main(int argc, char *argv[])
@@ -36,7 +38,8 @@ int main(int argc, char *argv[])
         yearly_solutions[2025] = std::vector<Solution *>{
             new Year2025Day1(), new Year2025Day2(), new Year2025Day3(),
             new Year2025Day4(), new Year2025Day5(), new Year2025Day6(),
-            new Year2025Day7(), new Year2025Day8()};
+            new Year2025Day7(), new Year2025Day8(), new Year2025Day9(),
+            new Year2025Day10()};
 
         auto solution = yearly_solutions[year][day - 1];
 
