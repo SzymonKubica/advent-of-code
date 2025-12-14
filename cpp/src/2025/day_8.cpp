@@ -35,8 +35,8 @@ std::vector<Point3d> read_points_from_file(std::string input_file)
 }
 
 struct PointsAndDistance {
-        Point3d *first;
-        Point3d *second;
+        const Point3d *first;
+        const Point3d *second;
         double distance;
 
       public:
@@ -49,6 +49,13 @@ struct PointsAndDistance {
 struct DisjointSetNode {
         DisjointSetNode *parent;
         int size;
+
+      public:
+        DisjointSetNode()
+        {
+                this->parent = this;
+                this->size = 1;
+        }
 };
 
 DisjointSetNode *find_parent(DisjointSetNode *node)
@@ -70,6 +77,19 @@ void union_sets(DisjointSetNode *node1, DisjointSetNode *node2)
         parent1->size += parent2->size;
 }
 
+int union_sets_get_resulting_size(DisjointSetNode *node1,
+                                  DisjointSetNode *node2)
+{
+        auto parent1 = find_parent(node1);
+        auto parent2 = find_parent(node2);
+        if (parent1 == parent2) {
+                return parent1->size;
+        }
+        parent2->parent = parent1;
+        parent1->size += parent2->size;
+        return parent1->size;
+}
+
 std::ostream &operator<<(std::ostream &os, const PointsAndDistance &points)
 {
         os << *(points.first) << std::endl;
@@ -78,10 +98,16 @@ std::ostream &operator<<(std::ostream &os, const PointsAndDistance &points)
         return os;
 }
 
-void Year2025Day8::first_part(std::string input_file)
+void log_connection(Point3d *first, Point3d *second)
 {
-        auto points = read_points_from_file(input_file);
+        std::cout << "Connecting:" << std::endl;
+        std::cout << *first << std::endl;
+        std::cout << *second << std::endl;
+}
 
+std::vector<PointsAndDistance>
+get_point_pairs_sorted_by_distance(const std::vector<Point3d> &points)
+{
         std::vector<PointsAndDistance> distances;
         for (int i = 0; i + 1 < points.size(); i++) {
                 for (int j = i + 1; j < points.size(); j++) {
@@ -102,9 +128,16 @@ void Year2025Day8::first_part(std::string input_file)
         for (int i = 0; i < 10; i++) {
                 std::cout << distances[i] << std::endl;
         }
+        return distances;
+}
 
-        std::map<Point3d *, DisjointSetNode *> circuits;
+void Year2025Day8::first_part(std::string input_file)
+{
+        auto points = read_points_from_file(input_file);
 
+        auto distances = get_point_pairs_sorted_by_distance(points);
+
+        std::map<const Point3d *, DisjointSetNode *> circuit_map;
         // For exaple inputs we need to take 10 point pairs and
         // for the real puzzle input it is 1000
         int required_connections = 1000;
@@ -120,61 +153,79 @@ void Year2025Day8::first_part(std::string input_file)
 
                 auto first = distance.first;
                 auto second = distance.second;
-                if (!circuits.contains(first) && !circuits.contains(second)) {
-                        DisjointSetNode *first_node = new DisjointSetNode{};
-                        first_node->parent = first_node;
-                        first_node->size = 2;
-                        DisjointSetNode *second_node = new DisjointSetNode{};
-                        second_node->parent = first_node;
-                        second_node->size = 1;
-                        circuits[first] = first_node;
-                        circuits[second] = second_node;
-                        connections++;
-                        current_pair_idx++;
-                        continue;
-                }
+                if (!circuit_map.contains(first))
+                        circuit_map[first] = new DisjointSetNode();
+                if (!circuit_map.contains(second))
+                        circuit_map[second] = new DisjointSetNode();
 
-                if (circuits.contains(first) && !circuits.contains(second)) {
-                        DisjointSetNode *first_node = circuits[first];
-                        DisjointSetNode *second_node = new DisjointSetNode{};
-                        second_node->parent = first_node;
-                        second_node->size = 1;
-                        find_parent(first_node)->size++;
-                        circuits[second] = second_node;
-                        connections++;
-                        current_pair_idx++;
-                        continue;
-                }
-
-                if (circuits.contains(second) && !circuits.contains(first)) {
-                        DisjointSetNode *second_node = circuits[second];
-                        DisjointSetNode *first_node = new DisjointSetNode{};
-                        first_node->parent = second_node;
-                        first_node->size = 1;
-                        find_parent(second_node)->size++;
-                        circuits[first] = first_node;
-                        connections++;
-                        current_pair_idx++;
-                        continue;
-                }
-
-                // case where both are already in the map
-                auto parent1 = find_parent(circuits[first]);
-                auto parent2 = find_parent(circuits[second]);
-                if (parent1 == parent2) {
-                        // already in the same set
-                        current_pair_idx++;
-                        continue;
-                }
-                union_sets(parent1, parent2);
+                union_sets(circuit_map[first], circuit_map[second]);
                 connections++;
                 current_pair_idx++;
         }
 
-        for (auto &[key, value] : circuits) {
-                std::cout << *key << "in a set with: " << value->size
-                          << std::endl;
+        std::set<DisjointSetNode *> unique_circuits;
+        for (auto &[key, value] : circuit_map) {
+                unique_circuits.insert(find_parent(value));
         }
+
+        std::vector<DisjointSetNode *> circuits(unique_circuits.begin(),
+                                                unique_circuits.end());
+
+        auto greater_size = [](DisjointSetNode *node1, DisjointSetNode *node2) {
+                return node1->size > node2->size;
+        };
+
+        std::sort(circuits.begin(), circuits.end(), greater_size);
+
+        for (auto circuit : circuits) {
+                std::cout << "Found a set with: " << circuit->size
+                          << " elements" << std::endl;
+        }
+
+        uint64_t output = 1;
+        for (int i = 0; i < 3; i++) {
+                output *= circuits[i]->size;
+        }
+
+        std::cout << "The product of the sizes of three largest circuits is: "
+                  << output << std::endl;
 }
 
-void Year2025Day8::second_part(std::string input_file) {}
+void Year2025Day8::second_part(std::string input_file)
+{
+
+        auto points = read_points_from_file(input_file);
+
+        auto distances = get_point_pairs_sorted_by_distance(points);
+
+        std::map<const Point3d *, DisjointSetNode *> circuit_map;
+
+        int current_pair_idx = 0;
+
+        while (true) {
+                auto &distance = distances[current_pair_idx];
+
+                auto first = distance.first;
+                auto second = distance.second;
+                if (!circuit_map.contains(first))
+                        circuit_map[first] = new DisjointSetNode();
+                if (!circuit_map.contains(second))
+                        circuit_map[second] = new DisjointSetNode();
+
+                int new_size = union_sets_get_resulting_size(
+                    circuit_map[first], circuit_map[second]);
+
+                if (new_size == points.size()) {
+                        std::cout << "Points form one circuit." << std::endl;
+                        std::cout << "The last two points: " << std::endl;
+                        std::cout << *first << std::endl;
+                        std::cout << *second << std::endl;
+                        int64_t product = first->x * second->x;
+                        std::cout
+                            << "Product of their X coordinates: " << product
+                            << std::endl;
+                        break;
+                }
+                current_pair_idx++;
+        }
+}
