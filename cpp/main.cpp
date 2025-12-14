@@ -12,6 +12,7 @@
 #include "src/2025/day_8.hpp"
 #include "src/2025/day_9.hpp"
 #include "src/2025/day_10.hpp"
+#include "src/2025/day_11.hpp"
 #include "src/solution.hpp"
 
 int main(int argc, char *argv[])
@@ -39,7 +40,7 @@ int main(int argc, char *argv[])
             new Year2025Day1(), new Year2025Day2(), new Year2025Day3(),
             new Year2025Day4(), new Year2025Day5(), new Year2025Day6(),
             new Year2025Day7(), new Year2025Day8(), new Year2025Day9(),
-            new Year2025Day10()};
+            new Year2025Day10(), new Year2025Day11};
 
         auto solution = yearly_solutions[year][day - 1];
 

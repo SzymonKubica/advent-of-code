@@ -27,8 +27,7 @@ struct IndicatorLights {
         IndicatorLights
         apply_button_press(const ButtonWiringSchematic &schematic) const
         {
-                std::vector<bool> transformed(lights_states.begin(),
-                                              lights_states.end());
+                std::vector<bool> transformed(lights_states);
                 for (int idx : schematic.buttons_controlled) {
                         assert(idx < lights_states.size());
                         transformed[idx] = !transformed[idx];
@@ -49,6 +48,46 @@ struct IndicatorLights {
         bool operator<(const IndicatorLights &other) const
         {
                 return lights_states < other.lights_states;
+        }
+};
+
+struct JoltageRequirements {
+        std::vector<int> required_joltages;
+
+      public:
+        JoltageRequirements
+        apply_button_press(const ButtonWiringSchematic &schematic) const
+        {
+                std::vector<int> transformed(required_joltages);
+                for (int idx : schematic.buttons_controlled) {
+                        assert(idx < required_joltages.size());
+                        transformed[idx]++;
+                }
+                return JoltageRequirements{.required_joltages = transformed};
+        }
+
+        JoltageRequirements get_initial_state() const
+        {
+                return {std::vector<int>(this->required_joltages.size(), 0)};
+        }
+
+        bool operator==(const JoltageRequirements &other) const
+        {
+                return required_joltages == other.required_joltages;
+        }
+
+        bool operator<(const JoltageRequirements &other) const
+        {
+                return required_joltages < other.required_joltages;
+        }
+
+        bool is_exceeded_by(const JoltageRequirements&other) const {
+          for (int i = 0; i < required_joltages.size(); i++) {
+            if (required_joltages[i] < other.required_joltages[i]) {
+              return true;
+            }
+          }
+          return false;
         }
 };
 
@@ -94,10 +133,6 @@ ButtonWiringSchematic parse_button_wiring(std::string input)
         return ButtonWiringSchematic{
             parse_comma_separated_numbers(numbers_str)};
 }
-
-struct JoltageRequirements {
-        std::vector<int> required_joltages;
-};
 
 JoltageRequirements parse_joltage_requirements(std::string input)
 {
@@ -200,36 +235,19 @@ read_specifications_from_file(std::string input_file)
         return specifications;
 }
 
-/*
-int search_lights_states(const IndicatorLights &target_state,
-                         const IndicatorLights &current_state,
-                         const std::vector<ButtonWiringSchematic> &schematics,
-                         std::map<IndicatorLights, int> &state_distance_map)
-{
-        if (target_state == current_state) {
-                return 0;
-        }
-        int minimum = 10000000;
-        visited_states.insert(current_state);
-        for (const auto &button : schematics) {
-                auto new_state = current_state.apply_button_press(button);
-                if (!visited_states.contains(new_state)) {
-                  std::cout << new_state << std::endl;
-                        int min_through_new =
-                            search_lights_states(target_state, new_state,
-                                                 schematics, visited_states);
-                        minimum = std::min(minimum, min_through_new);
-                        visited_states.insert(new_state);
-                }
-        }
-        return minimum + 1;
-}
-*/
-
 typedef std::pair<IndicatorLights, int> StateAndDistance;
+typedef std::pair<JoltageRequirements, int> JoltageStateAndDistance;
 struct DistanceCompare {
         bool operator()(const StateAndDistance &a,
                         const StateAndDistance &b) const
+        {
+                return a.second > b.second; // min-heap
+        }
+};
+
+struct JoltageDistanceCompare {
+        bool operator()(const JoltageStateAndDistance &a,
+                        const JoltageStateAndDistance &b) const
         {
                 return a.second > b.second; // min-heap
         }
@@ -260,7 +278,8 @@ int find_shortest_action_sequence(
                         if (!distance_map.contains(new_state)) {
                                 distance_map[new_state] = distance_through_curr;
                                 StateAndDistance new_entry = {
-                                  std::move(new_state), distance_through_curr};
+                                    std::move(new_state),
+                                    distance_through_curr};
                                 queue.push(new_entry);
                                 continue;
                         }
@@ -273,6 +292,54 @@ int find_shortest_action_sequence(
                 queue.pop();
         }
         return distance_map[lights];
+}
+
+// we need to constrain the search space somehow.
+
+
+
+int find_shortest_action_sequence_joltages(
+    const JoltageRequirements &requirements,
+    const std::vector<ButtonWiringSchematic> &schematics)
+{
+        auto initial_state = requirements.get_initial_state();
+
+        std::priority_queue<JoltageStateAndDistance, std::vector<JoltageStateAndDistance>,
+                            JoltageDistanceCompare>
+            queue;
+
+        std::map<JoltageRequirements, int> distance_map;
+
+        queue.push({initial_state, 0});
+        distance_map[initial_state] = 0;
+
+        while (!queue.empty()) {
+                const auto [state, distance] = queue.top();
+                for (auto &button : schematics) {
+                        auto new_state = state.apply_button_press(button);
+                        int distance_through_curr = distance + 1;
+
+                        if (requirements.is_exceeded_by(new_state)) {
+                          continue;
+                        }
+
+                        if (!distance_map.contains(new_state)) {
+                                distance_map[new_state] = distance_through_curr;
+                                JoltageStateAndDistance new_entry = {
+                                    std::move(new_state),
+                                    distance_through_curr};
+                                queue.push(new_entry);
+                                continue;
+                        }
+
+                        if (distance_map.contains(new_state) &&
+                            distance_map[new_state] > distance_through_curr) {
+                                distance_map[new_state] = distance_through_curr;
+                        }
+                }
+                queue.pop();
+        }
+        return distance_map[requirements];
 }
 
 void Year2025Day10::first_part(std::string input_file)
@@ -292,4 +359,18 @@ void Year2025Day10::first_part(std::string input_file)
                   << std::endl;
 }
 
-void Year2025Day10::second_part(std::string input_file) {}
+void Year2025Day10::second_part(std::string input_file) {
+        int total_button_presses = 0;
+        auto specifications = read_specifications_from_file(input_file);
+        for (auto &spec : specifications) {
+                std::cout << spec << std::endl;
+                int presses_required =
+                    find_shortest_action_sequence_joltages(spec.joltage_requirements, spec.buttons);
+                std::cout << "Fewest button presses required: "
+                          << presses_required << std::endl;
+                total_button_presses += presses_required;
+        }
+        std::cout << "A total of " << total_button_presses
+                  << " is required to correctly configure all machines."
+                  << std::endl;
+}
