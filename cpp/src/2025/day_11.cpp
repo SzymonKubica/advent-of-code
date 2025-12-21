@@ -1,7 +1,8 @@
 #include "day_11.hpp"
+#include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
-#include <istream>
 #include <sstream>
 #include <map>
 #include <set>
@@ -119,25 +120,35 @@ int find_paths_between(Device *start, Device *destination,
         return paths;
 }
 
-int find_paths_between_through(Device *start, Device *destination,
-                               std::vector<std::string> to_visit,
-                               std::set<std::string> visited)
+uint64_t
+count_paths_between(int depth, Device *start, Device *destination,
+                    std::unordered_map<std::string, int> &device_index_map,
+                    std::vector<bool> visited,
+                    std::unordered_map<std::string, uint64_t> &cache)
 {
+        if (cache.contains(start->identifier)) {
+                return cache[start->identifier];
+        }
         if (start == destination) {
-                for (auto &device_to_visit : to_visit) {
-                        if (!visited.contains(device_to_visit)) {
-                                return 0;
-                        }
-                }
                 return 1;
         }
 
-        visited.insert(start->identifier);
-        int paths = 0;
-        for (auto output : start->outputs) {
-                paths += find_paths_between_through(output, destination,
-                                                    to_visit, visited);
+        for (int i = 0; i < depth; i++) {
+                std::cout << " ";
         }
+        std::cout << "Processing node: " << *start << std::endl;
+
+        visited[device_index_map[start->identifier]] = true;
+        uint64_t paths = 0;
+        for (auto output : start->outputs) {
+                if (!visited[device_index_map[output->identifier]]) {
+
+                        paths += count_paths_between(
+                            depth + 1, output, destination, device_index_map,
+                            visited, cache);
+                }
+        }
+        cache[start->identifier] = paths;
         return paths;
 }
 
@@ -176,8 +187,12 @@ void Year2025Day11::second_part(std::string input_file)
             assemble_device_graph(device_configs);
 
         std::cout << "Parsed device graph:" << std::endl;
+        std::unordered_map<std::string, int> device_index_map;
+        int i = 0;
         for (auto &[identifier, device] : device_graph) {
                 std::cout << *device << std::endl;
+                device_index_map[identifier] = i;
+                i++;
         }
 
         auto svr = device_graph["svr"];
@@ -186,16 +201,35 @@ void Year2025Day11::second_part(std::string input_file)
         auto dac = device_graph["dac"];
         auto fft = device_graph["fft"];
 
-        int possible_paths_from_dac = find_paths_between(dac, out, {});
-        // int fft_to_dac = find_paths_between(fft, dac, {});
-        int dac_to_fft = find_paths_between(dac, fft, {});
-        int fft_to_dac = find_paths_between(fft, dac, {});
-        // int possible_paths_from_fft = find_paths_between(fft, out, {});
-        //  find_paths_between_through(you, out, {"dac", "fft"}, {});
-        std::cout << "Found " << possible_paths_from_dac
-                  << " paths between 'dac' and 'out'." << std::endl;
-        // This gives 0 which means that fft is in front of dac
-        // Whatever path goes through
-        std::cout << "Found " << dac_to_fft
-                  << " paths between 'dac' and 'fft'." << std::endl;
+        auto find_paths_between = [&device_index_map, &device_graph](
+                                      Device *start, Device *destination,
+                                      std::string first_name,
+                                      std::string second_name) {
+                std::vector<bool> visited(device_graph.size(), false);
+                std::unordered_map<std::string, uint64_t> cache;
+                uint64_t paths = count_paths_between(
+                    0, start, destination, device_index_map, visited, cache);
+                std::cout << "Found " << paths << " paths between '"
+                          << first_name << "' and '" << second_name << "'"
+                          << std::endl;
+                return paths;
+        };
+
+        uint64_t svr_dac = find_paths_between(svr, dac, "svr", "dac");
+        uint64_t svr_fft = find_paths_between(svr, fft, "svr", "ftt");
+        uint64_t dac_fft = find_paths_between(dac, fft, "dac", "fft");
+        uint64_t fft_dac = find_paths_between(fft, dac, "fft", "dac");
+        uint64_t dac_out = find_paths_between(dac, out, "dac", "out");
+        uint64_t fft_out = find_paths_between(fft, out, "fft", "out");
+
+        uint64_t total_paths_dac_fft = svr_dac * dac_fft * fft_out;
+        uint64_t total_paths_fft_dac = svr_fft * fft_dac * dac_out;
+
+        std::cout << "Total paths through first dac and then fft: "
+                  << total_paths_dac_fft << std::endl;
+        std::cout << "Total paths through first fft and then dac: "
+                  << total_paths_fft_dac << std::endl;
+
+        std::cout << "Total paths: "
+                  << total_paths_dac_fft + total_paths_fft_dac << std::endl;
 }
