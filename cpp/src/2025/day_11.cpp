@@ -222,6 +222,7 @@ void Year2025Day11::second_part(std::string input_file)
         uint64_t dac_out = find_paths_between(dac, out, "dac", "out");
         uint64_t fft_out = find_paths_between(fft, out, "fft", "out");
 
+        // We employ some combinatorics here.
         uint64_t total_paths_dac_fft = svr_dac * dac_fft * fft_out;
         uint64_t total_paths_fft_dac = svr_fft * fft_dac * dac_out;
 

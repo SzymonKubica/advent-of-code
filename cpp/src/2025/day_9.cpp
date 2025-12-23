@@ -5,6 +5,7 @@
 #include <sstream>
 #include <algorithm>
 #include <string>
+#include <map>
 #include <cassert>
 
 #include "../utils.hpp"
@@ -43,7 +44,27 @@ struct Rectangle {
                 return left_corner.x <= point.x && point.x <= right_corner.x &&
                        higher_corner.y <= point.y && point.y <= lower_corner.y;
         }
+
+        std::vector<std::pair<Point, Point>> get_segments()
+        {
+                Point second_vertex = {.x = primary_corner.x,
+                                       .y = opposite_corner.y};
+                Point third_vertex = {.x = opposite_corner.x,
+                                      .y = primary_corner.y};
+                return {{primary_corner, second_vertex},
+                        {second_vertex, opposite_corner},
+                        {opposite_corner, third_vertex},
+                        {third_vertex, primary_corner}};
+        }
 };
+
+std::ostream &operator<<(std::ostream &os, const Rectangle &rectangle)
+{
+        os << "Rectangle defined by: " << std::endl;
+        os << rectangle.primary_corner << std::endl;
+        os << rectangle.opposite_corner << std::endl;
+        return os;
+}
 
 std::vector<Point> Day9::read_points_from_file(std::string input_file)
 {
@@ -99,6 +120,96 @@ void Year2025Day9::first_part(std::string input_file)
                   << " pairs." << std::endl;
 }
 
+bool is_within_enclosed_region(
+    const std::pair<Point, Point> &point,
+    std::vector<std::pair<const Point &, const Point &>> boundary_segments)
+{
+        std::map<Direction, int> direction_to_intersection_counts;
+
+        for (auto &[left, right] : boundary_segments) {
+                if (left.x != right.x) {
+                        assert(left.y == right.y);
+                        // Handle intersection with horizontal segment
+                        if (std::min(left.x, right.x) <= point.x &&
+                            point.x <= std::max(left.x, right.x)) {
+                                if (point.y == left.y) {
+                                        // We short-circuit here as the point
+                                        // lies directly on one of the boundary
+                                        // segments.
+                                        return true;
+                                }
+                                if (point.y < left.y) {
+                                        direction_to_intersection_counts
+                                            [Direction::Down]++;
+                                }
+                                if (point.y > left.y) {
+                                        direction_to_intersection_counts
+                                            [Direction::Up]++;
+                                }
+                        }
+
+                        if (point.y == left.y) {
+                                // handle the intersection with an edge when the
+                                // ray is travelling parallel to it.
+                                if (std::min(left.x, right.x) > point.x) {
+                                        direction_to_intersection_counts
+                                            [Direction::Right]--;
+                                }
+                                if (std::max(left.x, right.x) < point.x) {
+                                        direction_to_intersection_counts
+                                            [Direction::Left]--;
+                                }
+                        }
+                } else {
+                        assert(left.y != right.y);
+                        // Handle intersection with vertical segment
+                        if (std::min(left.y, right.y) <= point.y &&
+                            point.y <= std::max(left.y, right.y)) {
+                                if (point.x == left.x) {
+                                        // We short-circuit here as the point
+                                        // lies directly on one of the boundary
+                                        // segments.
+                                        return true;
+                                }
+                                if (point.x < left.x) {
+                                        direction_to_intersection_counts
+                                            [Direction::Right]++;
+                                }
+                                if (point.x > left.x) {
+                                        direction_to_intersection_counts
+                                            [Direction::Left]++;
+                                }
+                        }
+                        if (point.x == left.x) {
+                                // handle the intersection with an edge when the
+                                // ray is travelling parallel to it.
+                                if (std::min(left.y, right.y) > point.y) {
+                                        direction_to_intersection_counts
+                                            [Direction::Down]--;
+                                }
+                                if (std::max(left.y, right.y) < point.y) {
+                                        direction_to_intersection_counts
+                                            [Direction::Up]--;
+                                }
+                        }
+                }
+        }
+
+        std::cout << direction_to_intersection_counts[Direction::Up]
+                  << std::endl;
+        std::cout << direction_to_intersection_counts[Direction::Down]
+                  << std::endl;
+        std::cout << direction_to_intersection_counts[Direction::Left]
+                  << std::endl;
+        std::cout << direction_to_intersection_counts[Direction::Right]
+                  << std::endl;
+
+        return direction_to_intersection_counts[Direction::Up] % 2 == 1 &&
+               direction_to_intersection_counts[Direction::Left] % 2 == 1 &&
+               direction_to_intersection_counts[Direction::Right] % 2 == 1 &&
+               direction_to_intersection_counts[Direction::Down] % 2 == 1;
+}
+
 void Year2025Day9::second_part(std::string input_file)
 {
         auto points = Day9::read_points_from_file(input_file);
@@ -106,10 +217,16 @@ void Year2025Day9::second_part(std::string input_file)
                 std::cout << p << std::endl;
         }
 
+        std::vector<std::pair<const Point &, const Point &>> boundary_segments;
+        for (int i = 0; i + 1 < points.size(); i++) {
+                boundary_segments.emplace_back(points[i], points[i + 1]);
+        }
+        boundary_segments.emplace_back(points[points.size() - 1], points[0]);
+
         std::vector<std::pair<const Point &, const Point &>> point_pairs;
 
         for (int i = 0; i + 1 < points.size(); i++) {
-                for (int j = i + i; j < points.size(); j++) {
+                for (int j = i + 1; j < points.size(); j++) {
                         point_pairs.emplace_back(points[i], points[j]);
                 }
         }
@@ -138,17 +255,47 @@ void Year2025Day9::second_part(std::string input_file)
         std::cout << "This was found after processing " << point_pairs.size()
                   << " pairs." << std::endl;
 
-        std::cout << "Top 10 pairs:" << std::endl;
-        for (int i = 0; i < 10; i++) {
-                std::cout << pairs_with_areas[i].first.first << std::endl;
-                std::cout << pairs_with_areas[i].first.second << std::endl;
-                std::cout << "Area: " << pairs_with_areas[i].second
-                          << std::endl;
-        }
-
         std::vector<Rectangle *> rectangles;
         for (auto pair_with_area : pairs_with_areas) {
                 rectangles.push_back(new Rectangle(
                     pair_with_area.first.first, pair_with_area.first.second));
+        }
+
+        // For each of the rectangles we need to check whether all of its
+        // corners lie within the enclosed area.
+        for (auto &rectangle : rectangles) {
+                std::cout << "Processsing rectangle:" << std::endl;
+                std::cout << *rectangle << std::endl;
+                std::cout << "Its area is: "
+                          << calculate_area(rectangle->primary_corner,
+                                            rectangle->opposite_corner)
+                          << std::endl;
+                bool good_rectangle = true;
+                for (auto &segment : rectangle->get_segments()) {
+                        bool result = is_within_enclosed_region(
+                            segment, boundary_segments);
+                        if (result) {
+                                std::cout << "Segment between" << segment.first << " and " << segment.second
+                                          << " is enclosed in the region."
+                                          << std::endl;
+                        } else {
+                                std::cout << "Segment between" << segment.first << " and " << segment.second
+                                          << " is not enclosed in the region. "
+                                             "The rectangle is not valid."
+                                          << std::endl;
+                                good_rectangle = false;
+                                break;
+                        }
+                }
+
+                if (good_rectangle) {
+                        std::cout << "Found a rectangle enclosed in the region."
+                                  << std::endl;
+                        std::cout << "Its area is: "
+                                  << calculate_area(rectangle->primary_corner,
+                                                    rectangle->opposite_corner)
+                                  << std::endl;
+                        break;
+                }
         }
 }
