@@ -104,10 +104,12 @@ bool Point::operator<(const Point &other) const
         return y < other.y;
 }
 
-Point Point::operator+(const Point &other) const {
+Point Point::operator+(const Point &other) const
+{
         return {.x = x + other.x, .y = y + other.y};
 }
-Point Point::operator-(const Point &other) const {
+Point Point::operator-(const Point &other) const
+{
         return {.x = x - other.x, .y = y - other.y};
 }
 Point Point::modulus() const { return {std::abs(x), std::abs(y)}; }
@@ -139,4 +141,32 @@ std::ostream &operator<<(std::ostream &os, const Point3d &point)
 std::ostream &operator<<(std::ostream &os, const Point &point)
 {
         return os << "{x: " << point.x << ", y: " << point.y << "}";
+}
+
+bool point_lies_on_segment(const Point &point, const Segment &segment) {
+  auto &[first, second] = segment;
+  auto min_x = std::min(first.x, second.x);
+  auto min_y = std::min(first.y, second.y);
+  auto max_x = std::max(first.x, second.x);
+  auto max_y = std::max(first.y, second.y);
+
+  if (point.x < min_x || max_x < point.x)
+    return false;
+
+  if (point.y < min_y || max_y < point.y)
+    return false;
+
+  auto d_x = second.x - first.x;
+  auto d_y = second.y - first.y;
+
+  /*
+   * Here we check if the gradient of the line between the tested point and first
+   * is equal to the gradient of the line segment. This is satisfied if
+   * (second.y - first.y)/(second.x - first.x) = (point.y - first.y)/(point.x - first.x)
+   * Which is also satisified iff the two products below are equal.
+   */
+  auto left = d_y * (point.x - first.x);
+  auto right = d_x * (point.y - first.y);
+
+  return left == right;
 }

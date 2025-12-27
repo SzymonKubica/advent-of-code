@@ -120,96 +120,6 @@ void Year2025Day9::first_part(std::string input_file)
                   << " pairs." << std::endl;
 }
 
-bool is_within_enclosed_region(
-    const std::pair<Point, Point> &segment,
-    std::vector<std::pair<const Point &, const Point &>> boundary_segments)
-{
-        std::map<Direction, int> direction_to_intersection_counts;
-
-        for (auto &[left, right] : boundary_segments) {
-                if (left.x != right.x) {
-                        assert(left.y == right.y);
-                        // Handle intersection with horizontal segment
-                        if (std::min(left.x, right.x) <= segment.x &&
-                            segment.x <= std::max(left.x, right.x)) {
-                                if (segment.y == left.y) {
-                                        // We short-circuit here as the point
-                                        // lies directly on one of the boundary
-                                        // segments.
-                                        return true;
-                                }
-                                if (segment.y < left.y) {
-                                        direction_to_intersection_counts
-                                            [Direction::Down]++;
-                                }
-                                if (segment.y > left.y) {
-                                        direction_to_intersection_counts
-                                            [Direction::Up]++;
-                                }
-                        }
-
-                        if (segment.y == left.y) {
-                                // handle the intersection with an edge when the
-                                // ray is travelling parallel to it.
-                                if (std::min(left.x, right.x) > segment.x) {
-                                        direction_to_intersection_counts
-                                            [Direction::Right]--;
-                                }
-                                if (std::max(left.x, right.x) < segment.x) {
-                                        direction_to_intersection_counts
-                                            [Direction::Left]--;
-                                }
-                        }
-                } else {
-                        assert(left.y != right.y);
-                        // Handle intersection with vertical segment
-                        if (std::min(left.y, right.y) <= segment.y &&
-                            segment.y <= std::max(left.y, right.y)) {
-                                if (segment.x == left.x) {
-                                        // We short-circuit here as the point
-                                        // lies directly on one of the boundary
-                                        // segments.
-                                        return true;
-                                }
-                                if (segment.x < left.x) {
-                                        direction_to_intersection_counts
-                                            [Direction::Right]++;
-                                }
-                                if (segment.x > left.x) {
-                                        direction_to_intersection_counts
-                                            [Direction::Left]++;
-                                }
-                        }
-                        if (segment.x == left.x) {
-                                // handle the intersection with an edge when the
-                                // ray is travelling parallel to it.
-                                if (std::min(left.y, right.y) > segment.y) {
-                                        direction_to_intersection_counts
-                                            [Direction::Down]--;
-                                }
-                                if (std::max(left.y, right.y) < segment.y) {
-                                        direction_to_intersection_counts
-                                            [Direction::Up]--;
-                                }
-                        }
-                }
-        }
-
-        std::cout << direction_to_intersection_counts[Direction::Up]
-                  << std::endl;
-        std::cout << direction_to_intersection_counts[Direction::Down]
-                  << std::endl;
-        std::cout << direction_to_intersection_counts[Direction::Left]
-                  << std::endl;
-        std::cout << direction_to_intersection_counts[Direction::Right]
-                  << std::endl;
-
-        return direction_to_intersection_counts[Direction::Up] % 2 == 1 &&
-               direction_to_intersection_counts[Direction::Left] % 2 == 1 &&
-               direction_to_intersection_counts[Direction::Right] % 2 == 1 &&
-               direction_to_intersection_counts[Direction::Down] % 2 == 1;
-}
-
 void Year2025Day9::second_part(std::string input_file)
 {
         auto points = Day9::read_points_from_file(input_file);
@@ -261,8 +171,6 @@ void Year2025Day9::second_part(std::string input_file)
                     pair_with_area.first.first, pair_with_area.first.second));
         }
 
-        // For each of the rectangles we need to check whether all of its
-        // corners lie within the enclosed area.
         for (auto &rectangle : rectangles) {
                 std::cout << "Processsing rectangle:" << std::endl;
                 std::cout << *rectangle << std::endl;
@@ -271,24 +179,7 @@ void Year2025Day9::second_part(std::string input_file)
                                             rectangle->opposite_corner)
                           << std::endl;
                 bool good_rectangle = true;
-                for (auto &segment : rectangle->get_segments()) {
-                        bool result = is_within_enclosed_region(
-                            segment, boundary_segments);
-                        if (result) {
-                                std::cout << "Segment between" << segment.first
-                                          << " and " << segment.second
-                                          << " is enclosed in the region."
-                                          << std::endl;
-                        } else {
-                                std::cout << "Segment between" << segment.first
-                                          << " and " << segment.second
-                                          << " is not enclosed in the region. "
-                                             "The rectangle is not valid."
-                                          << std::endl;
-                                good_rectangle = false;
-                                break;
-                        }
-                }
+
 
                 if (good_rectangle) {
                         std::cout << "Found a rectangle enclosed in the region."

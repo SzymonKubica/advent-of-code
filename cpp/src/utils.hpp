@@ -28,6 +28,10 @@ struct Point {
         Point modulus() const;
 };
 
+typedef std::pair<Point, Point> Segment;
+
+bool point_lies_on_segment(const Point&point, const Segment&segment);
+
 struct Point3d {
         int64_t x;
         int64_t y;
