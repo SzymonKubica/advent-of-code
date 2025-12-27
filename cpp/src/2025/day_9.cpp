@@ -121,7 +121,7 @@ void Year2025Day9::first_part(std::string input_file)
 }
 
 bool is_within_enclosed_region(
-    const std::pair<Point, Point> &point,
+    const std::pair<Point, Point> &segment,
     std::vector<std::pair<const Point &, const Point &>> boundary_segments)
 {
         std::map<Direction, int> direction_to_intersection_counts;
@@ -130,32 +130,32 @@ bool is_within_enclosed_region(
                 if (left.x != right.x) {
                         assert(left.y == right.y);
                         // Handle intersection with horizontal segment
-                        if (std::min(left.x, right.x) <= point.x &&
-                            point.x <= std::max(left.x, right.x)) {
-                                if (point.y == left.y) {
+                        if (std::min(left.x, right.x) <= segment.x &&
+                            segment.x <= std::max(left.x, right.x)) {
+                                if (segment.y == left.y) {
                                         // We short-circuit here as the point
                                         // lies directly on one of the boundary
                                         // segments.
                                         return true;
                                 }
-                                if (point.y < left.y) {
+                                if (segment.y < left.y) {
                                         direction_to_intersection_counts
                                             [Direction::Down]++;
                                 }
-                                if (point.y > left.y) {
+                                if (segment.y > left.y) {
                                         direction_to_intersection_counts
                                             [Direction::Up]++;
                                 }
                         }
 
-                        if (point.y == left.y) {
+                        if (segment.y == left.y) {
                                 // handle the intersection with an edge when the
                                 // ray is travelling parallel to it.
-                                if (std::min(left.x, right.x) > point.x) {
+                                if (std::min(left.x, right.x) > segment.x) {
                                         direction_to_intersection_counts
                                             [Direction::Right]--;
                                 }
-                                if (std::max(left.x, right.x) < point.x) {
+                                if (std::max(left.x, right.x) < segment.x) {
                                         direction_to_intersection_counts
                                             [Direction::Left]--;
                                 }
@@ -163,31 +163,31 @@ bool is_within_enclosed_region(
                 } else {
                         assert(left.y != right.y);
                         // Handle intersection with vertical segment
-                        if (std::min(left.y, right.y) <= point.y &&
-                            point.y <= std::max(left.y, right.y)) {
-                                if (point.x == left.x) {
+                        if (std::min(left.y, right.y) <= segment.y &&
+                            segment.y <= std::max(left.y, right.y)) {
+                                if (segment.x == left.x) {
                                         // We short-circuit here as the point
                                         // lies directly on one of the boundary
                                         // segments.
                                         return true;
                                 }
-                                if (point.x < left.x) {
+                                if (segment.x < left.x) {
                                         direction_to_intersection_counts
                                             [Direction::Right]++;
                                 }
-                                if (point.x > left.x) {
+                                if (segment.x > left.x) {
                                         direction_to_intersection_counts
                                             [Direction::Left]++;
                                 }
                         }
-                        if (point.x == left.x) {
+                        if (segment.x == left.x) {
                                 // handle the intersection with an edge when the
                                 // ray is travelling parallel to it.
-                                if (std::min(left.y, right.y) > point.y) {
+                                if (std::min(left.y, right.y) > segment.y) {
                                         direction_to_intersection_counts
                                             [Direction::Down]--;
                                 }
-                                if (std::max(left.y, right.y) < point.y) {
+                                if (std::max(left.y, right.y) < segment.y) {
                                         direction_to_intersection_counts
                                             [Direction::Up]--;
                                 }
@@ -275,11 +275,13 @@ void Year2025Day9::second_part(std::string input_file)
                         bool result = is_within_enclosed_region(
                             segment, boundary_segments);
                         if (result) {
-                                std::cout << "Segment between" << segment.first << " and " << segment.second
+                                std::cout << "Segment between" << segment.first
+                                          << " and " << segment.second
                                           << " is enclosed in the region."
                                           << std::endl;
                         } else {
-                                std::cout << "Segment between" << segment.first << " and " << segment.second
+                                std::cout << "Segment between" << segment.first
+                                          << " and " << segment.second
                                           << " is not enclosed in the region. "
                                              "The rectangle is not valid."
                                           << std::endl;
