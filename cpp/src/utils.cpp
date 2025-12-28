@@ -2,6 +2,7 @@
 #include <sstream>
 #include <fstream>
 #include <cmath>
+#include <cassert>
 #include <iostream>
 #include "./utils.hpp"
 
@@ -38,6 +39,55 @@ std::vector<std::string> read_lines_from_file(const std::string &file_path)
         }
 
         return lines;
+}
+
+Direction opposite_direction(Direction direction)
+{
+        switch (direction) {
+        case Direction::Up:
+                return Direction::Down;
+        case Direction::Down:
+                return Direction::Up;
+        case Direction::Left:
+                return Direction::Right;
+        case Direction::Right:
+                return Direction::Left;
+        default:
+                throw std::invalid_argument("Unrecognized direction.");
+        };
+}
+
+Direction turn_clockwise(Direction direction)
+{
+
+        switch (direction) {
+        case Direction::Up:
+                return Direction::Right;
+        case Direction::Down:
+                return Direction::Left;
+        case Direction::Left:
+                return Direction::Up;
+        case Direction::Right:
+                return Direction::Down;
+        default:
+                throw std::invalid_argument("Unrecognized direction.");
+        };
+}
+
+Direction turn_anticlockwise(Direction direction)
+{
+        switch (direction) {
+        case Direction::Up:
+                return Direction::Left;
+        case Direction::Down:
+                return Direction::Right;
+        case Direction::Left:
+                return Direction::Down;
+        case Direction::Right:
+                return Direction::Up;
+        default:
+                throw std::invalid_argument("Unrecognized direction.");
+        };
 }
 
 Point Point::translate(Direction direction) const
@@ -143,30 +193,79 @@ std::ostream &operator<<(std::ostream &os, const Point &point)
         return os << "{x: " << point.x << ", y: " << point.y << "}";
 }
 
-bool point_lies_on_segment(const Point &point, const Segment &segment) {
-  auto &[first, second] = segment;
-  auto min_x = std::min(first.x, second.x);
-  auto min_y = std::min(first.y, second.y);
-  auto max_x = std::max(first.x, second.x);
-  auto max_y = std::max(first.y, second.y);
+bool point_lies_on_segment(const Point &point, const Segment &segment)
+{
+        auto &[first, second] = segment;
+        auto min_x = std::min(first.x, second.x);
+        auto min_y = std::min(first.y, second.y);
+        auto max_x = std::max(first.x, second.x);
+        auto max_y = std::max(first.y, second.y);
 
-  if (point.x < min_x || max_x < point.x)
-    return false;
+        if (point.x < min_x || max_x < point.x)
+                return false;
 
-  if (point.y < min_y || max_y < point.y)
-    return false;
+        if (point.y < min_y || max_y < point.y)
+                return false;
 
-  auto d_x = second.x - first.x;
-  auto d_y = second.y - first.y;
+        auto d_x = second.x - first.x;
+        auto d_y = second.y - first.y;
 
-  /*
-   * Here we check if the gradient of the line between the tested point and first
-   * is equal to the gradient of the line segment. This is satisfied if
-   * (second.y - first.y)/(second.x - first.x) = (point.y - first.y)/(point.x - first.x)
-   * Which is also satisified iff the two products below are equal.
-   */
-  auto left = d_y * (point.x - first.x);
-  auto right = d_x * (point.y - first.y);
+        /*
+         * Here we check if the gradient of the line between the tested point
+         * and first is equal to the gradient of the line segment. This is
+         * satisfied if (second.y - first.y)/(second.x - first.x) = (point.y -
+         * first.y)/(point.x - first.x) Which is also satisified iff the two
+         * products below are equal.
+         */
+        auto left = d_y * (point.x - first.x);
+        auto right = d_x * (point.y - first.y);
 
-  return left == right;
+        return left == right;
+}
+
+/**
+ * For a vertical / horizontal segment it returns the direction where the
+ * segment is 'pointing' with its second endpoint.
+ */
+Direction segment_direction(const Segment &segment)
+{
+        bool is_vertical = segment.first.x == segment.second.x;
+        bool is_horizontal = segment.first.y == segment.second.y;
+
+        assert(is_vertical || is_horizontal);
+
+        if (is_vertical) {
+                return segment.first.y > segment.second.y ? Direction::Up
+                                                          : Direction::Down;
+        }
+
+        if (is_horizontal) {
+                return segment.first.x > segment.second.x ? Direction::Left
+                                                          : Direction::Right;
+        }
+
+        throw new std::invalid_argument(
+            "Segment is neither vertical nor horizontal.");
+}
+
+/**
+ * Given a base direction and a direction relative to that (only left/right)
+ * determines that direction in absolute terms. For instance if you are going
+ * down and you want to go to the left relative to that, you need to the right
+ * in absolute terms.
+ */
+Direction absolute_direction(Direction current_direction, Direction relative)
+{
+        assert(relative == Direction::Left || relative == Direction::Right);
+
+        if (relative == Direction::Left) {
+                return turn_anticlockwise(current_direction);
+        }
+
+        if (relative == Direction::Right) {
+                return turn_clockwise(current_direction);
+        }
+
+        throw new std::invalid_argument(
+            "Relative direction has to be either left or right.");
 }

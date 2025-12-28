@@ -8,6 +8,10 @@ std::vector<std::string> read_lines_from_file(const std::string &file_path);
 
 enum class Direction : uint8_t { Up, Down, Left, Right };
 
+Direction opposite_direction(Direction direction);
+Direction turn_clockwise(Direction direction);
+Direction turn_anticlockwise(Direction direction);
+
 /**
  * Represents a point on a grid.
  */
@@ -31,6 +35,8 @@ struct Point {
 typedef std::pair<Point, Point> Segment;
 
 bool point_lies_on_segment(const Point&point, const Segment&segment);
+Direction segment_direction(const Segment&segment);
+Direction absolute_direction(Direction current_direction, Direction relative);
 
 struct Point3d {
         int64_t x;
