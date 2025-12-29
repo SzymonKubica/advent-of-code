@@ -4,16 +4,107 @@
 #include <queue>
 #include <string>
 #include <vector>
-#include <set>
 #include <map>
 #include <cassert>
-#include <istream>
 #include <sstream>
+#include <iomanip>
 #include "../utils.hpp"
 
 struct ButtonWiringSchematic {
         std::vector<int> buttons_controlled;
 };
+
+class GaussianEliminationMatrix
+{
+
+      public:
+        std::vector<std::vector<double>> augmented_matrix;
+        void swap_rows(int first_row_idx, int second_row_idx)
+        {
+                augmented_matrix[first_row_idx].swap(
+                    augmented_matrix[second_row_idx]);
+        }
+        void scale_row(int row_idx, double multiplier)
+        {
+                for (int i = 0; i < augmented_matrix[row_idx].size(); i++) {
+                        augmented_matrix[row_idx][i] *= multiplier;
+                }
+        }
+        void add_multiple(int source_row_idx, int destination_row_idx,
+                          double scale)
+        {
+                for (int i = 0; i < augmented_matrix[source_row_idx].size();
+                     i++) {
+                        augmented_matrix[destination_row_idx][i] +=
+                            augmented_matrix[source_row_idx][i] * scale;
+                }
+        }
+
+        void pick_pivot_and_make_remaining_rows_zero(int target_column_index)
+        {
+                int pivot_index = -1;
+                for (int i = target_column_index; i < augmented_matrix.size();
+                     i++) {
+                        if (augmented_matrix[i][target_column_index] != 0) {
+                                pivot_index = i;
+                                break;
+                        }
+                }
+                std::cout << "Found pivot index: " << pivot_index << std::endl;
+
+                if (pivot_index == -1) {
+                  return;
+                }
+
+                double pivot_value =
+                    augmented_matrix[pivot_index][target_column_index];
+                scale_row(pivot_index, 1 / pivot_value);
+
+                for (int i = 0; i < augmented_matrix.size(); i++) {
+                        if (i == pivot_index) {
+                                continue;
+                        }
+
+                        double target_value =
+                            augmented_matrix[i][target_column_index];
+                        if (augmented_matrix[i][target_column_index] != 0) {
+                                add_multiple(pivot_index, i, -1 * target_value);
+                        }
+                }
+
+                if (pivot_index != -1 &&
+                    target_column_index < augmented_matrix.size()) {
+                        std::cout << "Swapping rows " << pivot_index << " "
+                                  << target_column_index << std::endl;
+                        swap_rows(pivot_index, target_column_index);
+                }
+        }
+};
+
+std::ostream &operator<<(std::ostream &os,
+                         const GaussianEliminationMatrix &matrix)
+{
+        unsigned long max_width = 0;
+        int default_double_decimals = 5;
+        for (auto &row : matrix.augmented_matrix) {
+                for (int i = 0; i < row.size(); i++) {
+
+                        max_width = std::max(max_width,
+                                             std::to_string(row[i]).length());
+                }
+        }
+        for (auto &row : matrix.augmented_matrix) {
+                for (int i = 0; i < row.size(); i++) {
+                        if (i == row.size() - 1) {
+                                os << " | ";
+                        }
+                        os << std::setw(max_width - default_double_decimals)
+                           << row[i];
+                }
+                os << std::endl;
+        }
+        return os;
+}
 
 struct IndicatorLights {
         std::vector<bool> lights_states;
@@ -81,13 +172,14 @@ struct JoltageRequirements {
                 return required_joltages < other.required_joltages;
         }
 
-        bool is_exceeded_by(const JoltageRequirements&other) const {
-          for (int i = 0; i < required_joltages.size(); i++) {
-            if (required_joltages[i] < other.required_joltages[i]) {
-              return true;
-            }
-          }
-          return false;
+        bool is_exceeded_by(const JoltageRequirements &other) const
+        {
+                for (int i = 0; i < required_joltages.size(); i++) {
+                        if (required_joltages[i] < other.required_joltages[i]) {
+                                return true;
+                        }
+                }
+                return false;
         }
 };
 
@@ -296,50 +388,44 @@ int find_shortest_action_sequence(
 
 // we need to constrain the search space somehow.
 
-
-
 int find_shortest_action_sequence_joltages(
     const JoltageRequirements &requirements,
     const std::vector<ButtonWiringSchematic> &schematics)
 {
         auto initial_state = requirements.get_initial_state();
 
-        std::priority_queue<JoltageStateAndDistance, std::vector<JoltageStateAndDistance>,
-                            JoltageDistanceCompare>
-            queue;
+        // we assemble the matrix representing the system of linear equations
+        // and try to solve it using gaussian elimination.
+        // each of the button wiring schematics is translated into a column of
+        // the augmented gaussian elimination matrix.
+        std::vector<std::vector<double>> augmented_matrix(
+            requirements.required_joltages.size(),
+            std::vector(schematics.size() + 1, 0.0));
 
-        std::map<JoltageRequirements, int> distance_map;
-
-        queue.push({initial_state, 0});
-        distance_map[initial_state] = 0;
-
-        while (!queue.empty()) {
-                const auto [state, distance] = queue.top();
-                for (auto &button : schematics) {
-                        auto new_state = state.apply_button_press(button);
-                        int distance_through_curr = distance + 1;
-
-                        if (requirements.is_exceeded_by(new_state)) {
-                          continue;
-                        }
-
-                        if (!distance_map.contains(new_state)) {
-                                distance_map[new_state] = distance_through_curr;
-                                JoltageStateAndDistance new_entry = {
-                                    std::move(new_state),
-                                    distance_through_curr};
-                                queue.push(new_entry);
-                                continue;
-                        }
-
-                        if (distance_map.contains(new_state) &&
-                            distance_map[new_state] > distance_through_curr) {
-                                distance_map[new_state] = distance_through_curr;
-                        }
+        for (int j = 0; j < schematics.size(); j++) {
+                auto &schematic = schematics[j];
+                for (int button_index : schematic.buttons_controlled) {
+                        augmented_matrix[button_index][j] = 1;
                 }
-                queue.pop();
         }
-        return distance_map[requirements];
+
+        for (int i = 0; i < requirements.required_joltages.size(); i++) {
+                auto &required_joltage = requirements.required_joltages[i];
+                augmented_matrix[i][schematics.size()] = required_joltage;
+        }
+
+        GaussianEliminationMatrix matrix{augmented_matrix};
+
+        std::cout << matrix << std::endl;
+
+        for (int i = 0; i < matrix.augmented_matrix.size(); i++) {
+                std::cout << "Pivoting column " << i << std::endl;
+                matrix.pick_pivot_and_make_remaining_rows_zero(i);
+                std::cout << "After pivot" << std::endl;
+                std::cout << matrix << std::endl;
+        }
+
+        return 0;
 }
 
 void Year2025Day10::first_part(std::string input_file)
@@ -359,13 +445,14 @@ void Year2025Day10::first_part(std::string input_file)
                   << std::endl;
 }
 
-void Year2025Day10::second_part(std::string input_file) {
+void Year2025Day10::second_part(std::string input_file)
+{
         int total_button_presses = 0;
         auto specifications = read_specifications_from_file(input_file);
         for (auto &spec : specifications) {
                 std::cout << spec << std::endl;
-                int presses_required =
-                    find_shortest_action_sequence_joltages(spec.joltage_requirements, spec.buttons);
+                int presses_required = find_shortest_action_sequence_joltages(
+                    spec.joltage_requirements, spec.buttons);
                 std::cout << "Fewest button presses required: "
                           << presses_required << std::endl;
                 total_button_presses += presses_required;
