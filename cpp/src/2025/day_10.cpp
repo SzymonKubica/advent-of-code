@@ -1,6 +1,4 @@
 #include "day_10.hpp"
-#include <climits>
-#include <cstdint>
 #include <queue>
 #include <string>
 #include <vector>
