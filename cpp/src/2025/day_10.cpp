@@ -53,7 +53,7 @@ class GaussianEliminationMatrix
                 std::cout << "Found pivot index: " << pivot_index << std::endl;
 
                 if (pivot_index == -1) {
-                  return;
+                        return;
                 }
 
                 double pivot_value =
