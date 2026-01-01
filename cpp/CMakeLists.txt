@@ -17,6 +17,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(DEBUG_BUILD)
 endif()
 
+find_package(Z3 REQUIRED)
+
 add_executable(advent-of-code
   ${SOURCES}
   main.cpp)
@@ -25,3 +27,10 @@ target_include_directories(advent-of-code PUBLIC
   "${PROJECT_BINARY_DIR}"
 )
 
+target_include_directories(advent-of-code PRIVATE
+  ${Z3_INCLUDE_DIRS}
+)
+
+target_link_libraries(advent-of-code PRIVATE
+  ${Z3_LIBRARIES}
+)

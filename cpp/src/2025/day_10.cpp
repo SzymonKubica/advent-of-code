@@ -5,8 +5,10 @@
 #include <map>
 #include <cassert>
 #include <sstream>
+#include <algorithm>
 #include <iomanip>
 #include "../utils.hpp"
+#include <z3++.h>
 
 struct ButtonWiringSchematic {
         std::vector<int> buttons_controlled;
@@ -426,6 +428,63 @@ int find_shortest_action_sequence_joltages(
         return 0;
 }
 
+/**
+ * A 'cheating' solution that translates the problem into a linear optimization
+ * problem and solves it using Z3. The idea here is to explore the Z3 API.
+ */
+int find_shortest_action_sequence_cheating(
+    const JoltageRequirements &requirements,
+    const std::vector<ButtonWiringSchematic> &schematics)
+{
+        z3::context c;
+        z3::optimize opt(c);
+        std::vector<z3::expr> button_press_counts;
+        std::cout << "Processing " << schematics.size() << " button schematics."
+                  << std::endl;
+        for (int i = 0; i < schematics.size(); i++) {
+                z3::expr expr =
+                    c.int_const(("button" + std::to_string(i)).c_str());
+                button_press_counts.push_back(expr);
+                opt.add(0 <= expr);
+        }
+
+        for (int i = 0; i < requirements.required_joltages.size(); i++) {
+                int required_joltage = requirements.required_joltages[i];
+                z3::expr sum = c.int_val(0);
+                for (int j = 0; j < schematics.size(); j++) {
+                        auto &schematic = schematics[j];
+                        if (std::find(schematic.buttons_controlled.begin(),
+                                      schematic.buttons_controlled.end(), i) !=
+                            schematic.buttons_controlled.end()) {
+                                sum = sum + button_press_counts[j];
+                        }
+                }
+                opt.add(sum == required_joltage);
+        }
+
+        z3::expr sum = c.int_val(0);
+        for (auto &button : button_press_counts) {
+                sum = sum + button;
+        }
+
+        z3::optimize::handle h = opt.minimize(sum);
+
+        if (opt.check() == z3::sat) {
+                z3::model m = opt.get_model();
+                int minimum_presses_required = 0;
+                for (auto &button : button_press_counts) {
+                        int button_value = m.eval(button).as_int64();
+                        std::cout << "Presses required for: " << button << " "
+                                  << button_value << std::endl;
+                        minimum_presses_required += button_value;
+                }
+
+                std::cout << "Total sum: " << minimum_presses_required << std::endl;
+                return minimum_presses_required;
+        }
+        return -1;
+}
+
 void Year2025Day10::first_part(std::string input_file)
 {
         int total_button_presses = 0;
@@ -449,7 +508,7 @@ void Year2025Day10::second_part(std::string input_file)
         auto specifications = read_specifications_from_file(input_file);
         for (auto &spec : specifications) {
                 std::cout << spec << std::endl;
-                int presses_required = find_shortest_action_sequence_joltages(
+                int presses_required = find_shortest_action_sequence_cheating(
                     spec.joltage_requirements, spec.buttons);
                 std::cout << "Fewest button presses required: "
                           << presses_required << std::endl;
