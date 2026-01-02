@@ -479,7 +479,8 @@ int find_shortest_action_sequence_cheating(
                         minimum_presses_required += button_value;
                 }
 
-                std::cout << "Total sum: " << minimum_presses_required << std::endl;
+                std::cout << "Total sum: " << minimum_presses_required
+                          << std::endl;
                 return minimum_presses_required;
         }
         return -1;
