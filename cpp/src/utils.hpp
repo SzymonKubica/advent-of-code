@@ -5,6 +5,7 @@
 #include <iostream>
 
 std::vector<std::string> read_lines_from_file(const std::string &file_path);
+std::string read_file_as_string(const std::string &file_path);
 
 enum class Direction : uint8_t { Up, Down, Left, Right };
 

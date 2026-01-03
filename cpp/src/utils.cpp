@@ -41,6 +41,23 @@ std::vector<std::string> read_lines_from_file(const std::string &file_path)
         return lines;
 }
 
+std::string read_file_as_string(const std::string &file_path)
+{
+
+        std::ifstream file(file_path);
+        if (!file.is_open()) {
+                throw std::runtime_error("Could not open file");
+        }
+
+        std::ostringstream ss;
+        ss << file.rdbuf();
+        file.close();
+
+        std::string file_contents = ss.str();
+
+        return file_contents;
+}
+
 Direction opposite_direction(Direction direction)
 {
         switch (direction) {
